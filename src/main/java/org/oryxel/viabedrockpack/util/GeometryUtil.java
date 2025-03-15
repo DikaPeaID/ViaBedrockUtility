@@ -124,13 +124,14 @@ public final class GeometryUtil {
         final Map<String, ModelPart> rootParts = new HashMap<>();
 
         for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
-            if (entry.getValue().parent != null) {
-                PartInfo parentPart = stringToPart.get(entry.getValue().parent);
-                if (parentPart != null) {
-                    parentPart.children.put(entry.getKey(), entry.getValue().part);
-                }
-            } else {
-                rootParts.put(entry.getKey(), entry.getValue().part);
+            if (entry.getValue().parent.isBlank()) {
+                rootParts.put(entry.getKey(), entry.getValue().part());
+                continue;
+            }
+
+            PartInfo parentPart = stringToPart.get(entry.getValue().parent);
+            if (parentPart != null) {
+                parentPart.children.put(entry.getKey(), entry.getValue().part);
             }
         }
 

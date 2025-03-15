@@ -1,5 +1,6 @@
 package org.oryxel.viabedrockpack.entity.renderer;
 
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
@@ -21,7 +22,22 @@ public class CustomEntityRenderer extends MobEntityRenderer<CustomEntity, Living
     }
 
     @Override
+    protected boolean canBeCulled(CustomEntity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean shouldRender(CustomEntity entity, Frustum frustum, double x, double y, double z) {
+        return entity.shouldRender(x, y, z);
+    }
+
+    @Override
     public LivingEntityRenderState createRenderState() {
         return new LivingEntityRenderState();
+    }
+
+    @Override
+    public void updateRenderState(CustomEntity livingEntity, LivingEntityRenderState livingEntityRenderState, float f) {
+        super.updateRenderState(livingEntity, livingEntityRenderState, f);
     }
 }

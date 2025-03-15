@@ -35,7 +35,7 @@ public class ViaBedrockPack implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Hello ViaBedrockPack!");
 
-
+		Test.test();
 
 		final BedrockMessageHandler handler = new BedrockMessageHandler();
 		PayloadTypeRegistry.playS2C().register(CustomEntityData.ID, STREAM_CODEC);
