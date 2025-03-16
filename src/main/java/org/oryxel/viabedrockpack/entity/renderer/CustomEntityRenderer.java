@@ -4,6 +4,7 @@ import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 import org.oryxel.viabedrockpack.entity.CustomEntity;
 import org.oryxel.viabedrockpack.entity.renderer.model.CustomEntityModel;
@@ -22,13 +23,14 @@ public class CustomEntityRenderer extends MobEntityRenderer<CustomEntity, Living
     }
 
     @Override
-    protected boolean canBeCulled(CustomEntity entity) {
-        return false;
+    public boolean shouldRender(CustomEntity entity, Frustum frustum, double x, double y, double z) {
+        double d = 64.0F * Entity.getRenderDistanceMultiplier();
+        return entity.squaredDistanceTo(x, y, z) <= d * d;
     }
 
     @Override
-    public boolean shouldRender(CustomEntity entity, Frustum frustum, double x, double y, double z) {
-        return entity.shouldRender(x, y, z);
+    protected boolean canBeCulled(CustomEntity entity) {
+        return false;
     }
 
     @Override

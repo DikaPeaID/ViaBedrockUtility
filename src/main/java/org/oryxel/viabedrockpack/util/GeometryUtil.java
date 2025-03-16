@@ -30,8 +30,6 @@ public final class GeometryUtil {
                 }
             }
 
-            final float pivotX = -bone.getPivot().getX(), pivotY = bone.getPivot().getY(), pivotZ = bone.getPivot().getZ();
-
             final List<ModelPart.Cuboid> cuboids = new ArrayList<>();
             for (final Cube cube : bone.getCubes().values()) {
                 final float originX = cube.getPosition().getX(), originY = cube.getPosition().getY(), originZ = cube.getPosition().getZ();
@@ -47,8 +45,8 @@ public final class GeometryUtil {
                     }
                 }
 
-                // Y have to be flipped for whatever reason.
-                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, originX - pivotX, -(originY + sizeY) - pivotY, originZ - pivotZ, sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                // Y have to be flipped for whatever reason, also have to offset down by 1.5 block (which is 24 in model size)?
+                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, originX, -(originY - 24 + sizeY), originZ, sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
                 correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.isMirror());
 
                 cuboids.add(cuboid);
@@ -57,18 +55,7 @@ public final class GeometryUtil {
             final Map<String, ModelPart> children = new HashMap<>();
             final ModelPart part = new ModelPart(cuboids, children);
 
-            System.out.println(bone.getRotation());
-            part.setAngles(bone.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
-
-            part.setPivot(pivotX, pivotY, pivotZ);
-
-//            if (parent != null) {
-//                // This appears to be a difference between Bedrock and Java - pivots are carried over for us
-//                part.setPivot(pivotX + parent.getPivot().getX(), pivotY - parent.getPivot().getY(), pivotZ - parent.getPivot().getZ());
-//            } else {
-//                part.setPivot(pivotX, pivotY, pivotZ);
-//            }
-
+            // Seems to be important or else the pivot and rotation will be reset.
             part.setDefaultTransform(part.getTransform());
 
             stringToPart.put(bone.getName(), new PartInfo(bone.getParent(), part, children));

@@ -24,7 +24,7 @@ public class BedrockMessageHandler {
         final EntityType<CustomEntity> type = Registry.register(
                 Registries.ENTITY_TYPE,
                 identifier,
-                EntityType.Builder.create(CustomEntity::new, SpawnGroup.MISC).dimensions(0.5F, 0.5F).build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, identifier)));
+                EntityType.Builder.create(CustomEntity::new, SpawnGroup.MISC).dimensions(0, 0).build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, identifier)));
 
         final List<BedrockGeometryModel> models = BedrockGeometryModel.fromJson(data.geometryData());
 
