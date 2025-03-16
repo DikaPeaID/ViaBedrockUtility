@@ -48,62 +48,8 @@ public final class GeometryUtil {
                 }
 
                 // Y have to be flipped for whatever reason.
-                float x = originX - pivotX, y = -(originY + sizeY) - pivotY, z = originZ - pivotZ;
-
-                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, x, y, z, sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
-
-                final boolean mirror = cube.isMirror();
-
-                // TODO: Fix UV map.
-                float f = x + sizeX;
-                float g = y + sizeY;
-                float h = z + sizeZ;
-                if (mirror) {
-                    float i = f;
-                    f = x;
-                    x = i;
-                }
-
-                ModelPart.Vertex vertex = new ModelPart.Vertex(x, y, z, 0.0F, 0.0F);
-                ModelPart.Vertex vertex2 = new ModelPart.Vertex(f, y, z, 0.0F, 8.0F);
-                ModelPart.Vertex vertex3 = new ModelPart.Vertex(f, g, z, 8.0F, 8.0F);
-                ModelPart.Vertex vertex4 = new ModelPart.Vertex(x, g, z, 8.0F, 0.0F);
-                ModelPart.Vertex vertex5 = new ModelPart.Vertex(x, y, h, 0.0F, 0.0F);
-                ModelPart.Vertex vertex6 = new ModelPart.Vertex(f, y, h, 0.0F, 8.0F);
-                ModelPart.Vertex vertex7 = new ModelPart.Vertex(f, g, h, 8.0F, 8.0F);
-                ModelPart.Vertex vertex8 = new ModelPart.Vertex(x, g, h, 8.0F, 0.0F);
-
-                final ModelPart.Quad[] sides = cuboid.sides;
-                int s = 0;
-                if (set.contains(Direction.DOWN)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.DOWN);
-                    sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex6, vertex5, vertex, vertex2}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.DOWN);
-                }
-
-                if (set.contains(Direction.UP)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.UP);
-                    sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex3, vertex4, vertex8, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.UP);
-                }
-
-                if (set.contains(Direction.WEST)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.WEST);
-                    sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex, vertex5, vertex8, vertex4}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.WEST);
-                }
-
-                if (set.contains(Direction.NORTH)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.NORTH);
-                    sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex2, vertex, vertex4, vertex3}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.NORTH);
-                }
-
-                if (set.contains(Direction.EAST)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.EAST);
-                    sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex6, vertex2, vertex3, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.EAST);
-                }
-
-                if (set.contains(Direction.SOUTH)) {
-                    final Float[] uv = uvMap.getMap().get(org.cube.converter.util.element.Direction.SOUTH);
-                    sides[s] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex5, vertex6, vertex7, vertex8}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.SOUTH);
-                }
+                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, originX - pivotX, -(originY + sizeY) - pivotY, originZ - pivotZ, sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.isMirror());
 
                 cuboids.add(cuboid);
             }
@@ -112,9 +58,7 @@ public final class GeometryUtil {
             final ModelPart part = new ModelPart(cuboids, children);
 
             System.out.println(bone.getRotation());
-            // part.setAngles(bone.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
-
-            System.out.println(bone.getPivot());
+            part.setAngles(bone.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
 
             part.setPivot(pivotX, pivotY, pivotZ);
 
@@ -148,5 +92,57 @@ public final class GeometryUtil {
     }
 
     private record PartInfo(String parent, ModelPart part, Map<String, ModelPart> children) {
+    }
+
+    private static void correctUv(final ModelPart.Cuboid cuboid, final Set<Direction> set, final UVMap map, final float uvWidth, final float uvHeight, final boolean mirror) {
+        float x = cuboid.minX, y = cuboid.minY, z = cuboid.minZ;
+
+        float f = cuboid.maxX, g = cuboid.maxY, h = cuboid.maxZ;
+        if (mirror) {
+            float i = f;
+            f = x;
+            x = i;
+        }
+
+        ModelPart.Vertex vertex = new ModelPart.Vertex(x, y, z, 0.0F, 0.0F);
+        ModelPart.Vertex vertex2 = new ModelPart.Vertex(f, y, z, 0.0F, 8.0F);
+        ModelPart.Vertex vertex3 = new ModelPart.Vertex(f, g, z, 8.0F, 8.0F);
+        ModelPart.Vertex vertex4 = new ModelPart.Vertex(x, g, z, 8.0F, 0.0F);
+        ModelPart.Vertex vertex5 = new ModelPart.Vertex(x, y, h, 0.0F, 0.0F);
+        ModelPart.Vertex vertex6 = new ModelPart.Vertex(f, y, h, 0.0F, 8.0F);
+        ModelPart.Vertex vertex7 = new ModelPart.Vertex(f, g, h, 8.0F, 8.0F);
+        ModelPart.Vertex vertex8 = new ModelPart.Vertex(x, g, h, 8.0F, 0.0F);
+
+        final ModelPart.Quad[] sides = cuboid.sides;
+        int s = 0;
+        if (set.contains(Direction.DOWN)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.DOWN);
+            sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex6, vertex5, vertex, vertex2}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.DOWN);
+        }
+
+        if (set.contains(Direction.UP)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.UP);
+            sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex3, vertex4, vertex8, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.UP);
+        }
+
+        if (set.contains(Direction.WEST)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.WEST);
+            sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex, vertex5, vertex8, vertex4}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.WEST);
+        }
+
+        if (set.contains(Direction.NORTH)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.NORTH);
+            sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex2, vertex, vertex4, vertex3}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.NORTH);
+        }
+
+        if (set.contains(Direction.EAST)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.EAST);
+            sides[s++] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex6, vertex2, vertex3, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.EAST);
+        }
+
+        if (set.contains(Direction.SOUTH)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.SOUTH);
+            sides[s] = new ModelPart.Quad(new ModelPart.Vertex[]{vertex5, vertex6, vertex7, vertex8}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.SOUTH);
+        }
     }
 }
