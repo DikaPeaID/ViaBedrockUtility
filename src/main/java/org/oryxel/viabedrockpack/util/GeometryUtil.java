@@ -11,6 +11,8 @@ import org.oryxel.viabedrockpack.entity.renderer.model.CustomEntityModel;
 import java.util.*;
 
 public final class GeometryUtil {
+    public static String HARDCODED_INDICATOR = "viabedrockpack" + "viabedrockpack".hashCode();
+
     public static CustomEntityModel buildCustomModel(final BedrockGeometryModel geometry) {
         // There are some times when the skin image file is larger than the geometry UV points.
         // In this case, we need to scale UV calls
@@ -20,21 +22,18 @@ public final class GeometryUtil {
 
         final Map<String, PartInfo> stringToPart = new HashMap<>();
         for (final Parent bone : geometry.getParents()) {
-            Parent parent = null;
-            if (!bone.getParent().isBlank()) {
-                for (final Parent otherParent : geometry.getParents()) {
-                    if (otherParent.getName().equals(bone.getParent())) {
-                        parent = otherParent;
-                        break;
-                    }
-                }
-            }
+            final Map<String, ModelPart> children = new HashMap<>();
+            final ModelPart part = new ModelPart(List.of(), children);
 
-            final List<ModelPart.Cuboid> cuboids = new ArrayList<>();
+            part.setPivot(-bone.getPivot().getX(), bone.getPivot().getY(), bone.getPivot().getZ());
+            // part.setAngles(-bone.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, -bone.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
+            // Seems to be important or else the pivot and rotation will be reset.
+            part.setDefaultTransform(part.getTransform());
+
+            // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
             for (final Cube cube : bone.getCubes().values()) {
-                final float originX = cube.getPosition().getX(), originY = cube.getPosition().getY(), originZ = cube.getPosition().getZ();
                 final float sizeX = cube.getSize().getX(), sizeY = cube.getSize().getY(), sizeZ = cube.getSize().getZ();
-                final float inflate = cube.getInflate();
+                final float inflate = cube.getInflate() + 1.0E-3F;
 
                 final UVMap uvMap = cube.getUvMap().clone();
 
@@ -46,17 +45,15 @@ public final class GeometryUtil {
                 }
 
                 // Y have to be flipped for whatever reason, also have to offset down by 1.5 block (which is 24 in model size)?
-                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, originX, -(originY - 24 + sizeY), originZ, sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, cube.getPosition().getX(), -(cube.getPosition().getY() - 24 + sizeY), cube.getPosition().getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
                 correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.isMirror());
 
-                cuboids.add(cuboid);
+                final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of(HARDCODED_INDICATOR, new ModelPart(List.of(), Map.of())));
+                cubePart.setPivot(-cube.getPivot().getX(), cube.getPivot().getY(), cube.getPivot().getZ());
+                // cubePart.setAngles(-cube.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, -cube.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, cube.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
+                cubePart.setDefaultTransform(cubePart.getTransform());
+                children.put(cube.getParent() + cube.hashCode(), cubePart);
             }
-
-            final Map<String, ModelPart> children = new HashMap<>();
-            final ModelPart part = new ModelPart(cuboids, children);
-
-            // Seems to be important or else the pivot and rotation will be reset.
-            part.setDefaultTransform(part.getTransform());
 
             stringToPart.put(bone.getName(), new PartInfo(bone.getParent(), part, children));
         }
@@ -64,6 +61,8 @@ public final class GeometryUtil {
         final Map<String, ModelPart> rootParts = new HashMap<>();
 
         for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
+            entry.getValue().children.put(HARDCODED_INDICATOR, new ModelPart(List.of(), Map.of()));
+
             if (entry.getValue().parent.isBlank()) {
                 rootParts.put(entry.getKey(), entry.getValue().part());
                 continue;
