@@ -1,4 +1,4 @@
-package org.oryxel.viabedrockutility.mixin;
+package org.oryxel.viabedrockutility.mixin.render;
 
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.util.math.MatrixStack;

@@ -35,6 +35,7 @@ public class ViaBedrockUtility {
     private ViaBedrockUtility() {}
 
     private PackManager packManager;
+    private boolean viaBedrockPresent;
 
     public void init() {
         // Register custom entity.
@@ -44,6 +45,7 @@ public class ViaBedrockUtility {
 
         // Register custom payload.
         final PayloadHandler handler = new PayloadHandler();
+        PayloadTypeRegistry.configurationS2C().register(BasePayload.ID, BasePayload.STREAM_CODEC);
         PayloadTypeRegistry.playS2C().register(BasePayload.ID, BasePayload.STREAM_CODEC);
         ClientPlayNetworking.registerGlobalReceiver(BasePayload.ID, (payload, context) -> payload.handle(handler));
     }

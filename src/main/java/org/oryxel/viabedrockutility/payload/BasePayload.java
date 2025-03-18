@@ -1,16 +1,22 @@
 package org.oryxel.viabedrockutility.payload;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
+import org.oryxel.viabedrockutility.ViaBedrockUtility;
 import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
 import org.oryxel.viabedrockutility.payload.enums.PayloadType;
-import org.oryxel.viabedrockutility.payload.impl.ResourcePackPayload;
 
 import java.nio.charset.StandardCharsets;
 
+@RequiredArgsConstructor
+@Getter
 public class BasePayload implements CustomPayload {
+    private final PayloadType type;
+
     public static Id<BasePayload> ID = new Id<>(Identifier.of(ViaBedrockUtilityFabric.MOD_ID, "data"));
 
     public static final PacketCodec<PacketByteBuf, BasePayload> STREAM_CODEC = PacketCodec.of(null, buf -> {
@@ -20,8 +26,10 @@ public class BasePayload implements CustomPayload {
         }
 
         switch (PayloadType.values()[type]) {
-            case RESOURCE_PACK -> {
-                return new ResourcePackPayload(readString(buf));
+            case CONFIRM -> {
+                // Confirm that ViaBedrock is present, this should be sent back right after we send confirm register channel.
+                ViaBedrockUtility.getInstance().setViaBedrockPresent(true);
+                return new BasePayload(PayloadType.CONFIRM);
             }
             case SPAWN_REQUEST -> {
                 return null;

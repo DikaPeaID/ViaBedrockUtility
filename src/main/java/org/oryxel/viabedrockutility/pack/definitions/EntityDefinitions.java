@@ -18,14 +18,15 @@ public class EntityDefinitions {
     private final Map<String, EntityDefinition> entities = new HashMap<>();
 
     public EntityDefinitions(final PackManager packManager) {
-        final Content content = packManager.getContent();
-        for (final String entityPath : content.getFilesDeep("entity/", ".json")) {
-            try {
-                final BedrockEntityData entityData = BedrockEntityParser.parse(content.getString(entityPath));
-                final Identifier identifier = Identifier.of(entityData.getIdentifier());
-                this.entities.put(identifier.toString(), new EntityDefinition(identifier, entityData));
-            } catch (Throwable e) {
-                ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse entity definition {}", entityPath);
+        for (final Content content : packManager.getPacks()) {
+            for (final String entityPath : content.getFilesDeep("entity/", ".json")) {
+                try {
+                    final BedrockEntityData entityData = BedrockEntityParser.parse(content.getString(entityPath));
+                    final Identifier identifier = Identifier.of(entityData.getIdentifier());
+                    this.entities.put(identifier.toString(), new EntityDefinition(identifier, entityData));
+                } catch (Throwable e) {
+                    ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse entity definition {}", entityPath);
+                }
             }
         }
     }

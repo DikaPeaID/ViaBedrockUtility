@@ -18,17 +18,17 @@ public class ModelDefinitions {
     private final Map<String, CustomEntityModel> entityModels = new HashMap<>();
 
     public ModelDefinitions(final PackManager packManager) {
-        final Content content = packManager.getContent();
-
-        for (final String modelPath : content.getFilesDeep("models/", ".json")) {
-            try {
-                for (final BedrockGeometryModel bedrockGeometry : BedrockGeometryParser.parse(content.getString(modelPath))) {
-                    if (modelPath.startsWith("models/entity/")) {
-                        this.entityModels.put(bedrockGeometry.getIdentifier(), GeometryUtil.buildCustomModel(bedrockGeometry));
+        for (final Content content : packManager.getPacks()) {
+            for (final String modelPath : content.getFilesDeep("models/", ".json")) {
+                try {
+                    for (final BedrockGeometryModel bedrockGeometry : BedrockGeometryParser.parse(content.getString(modelPath))) {
+                        if (modelPath.startsWith("models/entity/")) {
+                            this.entityModels.put(bedrockGeometry.getIdentifier(), GeometryUtil.buildCustomModel(bedrockGeometry));
+                        }
                     }
+                } catch (Throwable e) {
+                    ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse model definition {}", modelPath);
                 }
-            } catch (Throwable e) {
-                ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse model definition {}", modelPath);
             }
         }
     }

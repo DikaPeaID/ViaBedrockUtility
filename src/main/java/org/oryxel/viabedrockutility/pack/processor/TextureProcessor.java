@@ -8,22 +8,25 @@ import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
 import org.oryxel.viabedrockutility.pack.content.Content;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 public class TextureProcessor {
-    public static void process(final Content content) {
+    public static void process(final List<Content> packs) {
         final MinecraftClient client = MinecraftClient.getInstance();
 
-        for (final String path : content.getFilesDeep("textures/", "")) {
-            final Content.LazyImage image = content.getShortnameImage(path);
-            if (image == null) {
-                continue;
-            }
+        for (final Content content : packs) {
+            for (final String path : content.getFilesDeep("textures/", "")) {
+                final Content.LazyImage image = content.getShortnameImage(path);
+                if (image == null) {
+                    continue;
+                }
 
-            try {
-                client.getTextureManager().registerTexture(Identifier.ofVanilla(path.toLowerCase(Locale.ROOT)), new NativeImageBackedTexture(NativeImage.read(image.getPngBytes())));
-            } catch (final IOException e) {
-                ViaBedrockUtilityFabric.LOGGER.warn("Unable to register texture {}", path);
+                try {
+                    client.getTextureManager().registerTexture(Identifier.ofVanilla(path.toLowerCase(Locale.ROOT)), new NativeImageBackedTexture(NativeImage.read(image.getPngBytes())));
+                } catch (final IOException e) {
+                    ViaBedrockUtilityFabric.LOGGER.warn("Unable to register texture {}", path);
+                }
             }
         }
     }
