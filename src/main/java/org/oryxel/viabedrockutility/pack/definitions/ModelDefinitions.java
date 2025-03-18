@@ -4,16 +4,18 @@ package org.oryxel.viabedrockutility.pack.definitions;
 import lombok.Getter;
 import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.cube.converter.parser.bedrock.geometry.BedrockGeometryParser;
+import org.oryxel.viabedrockutility.entity.renderer.model.CustomEntityModel;
 import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
 import org.oryxel.viabedrockutility.pack.PackManager;
 import org.oryxel.viabedrockutility.pack.content.Content;
+import org.oryxel.viabedrockutility.util.GeometryUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Getter
 public class ModelDefinitions {
-    private final Map<String, BedrockGeometryModel> entityModels = new HashMap<>();
+    private final Map<String, CustomEntityModel> entityModels = new HashMap<>();
 
     public ModelDefinitions(final PackManager packManager) {
         final Content content = packManager.getContent();
@@ -22,7 +24,7 @@ public class ModelDefinitions {
             try {
                 for (final BedrockGeometryModel bedrockGeometry : BedrockGeometryParser.parse(content.getString(modelPath))) {
                     if (modelPath.startsWith("models/entity/")) {
-                        this.entityModels.put(bedrockGeometry.getIdentifier(), bedrockGeometry);
+                        this.entityModels.put(bedrockGeometry.getIdentifier(), GeometryUtil.buildCustomModel(bedrockGeometry));
                     }
                 }
             } catch (Throwable e) {
