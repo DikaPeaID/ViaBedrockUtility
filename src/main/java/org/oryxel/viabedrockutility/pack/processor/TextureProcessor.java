@@ -1,0 +1,30 @@
+package org.oryxel.viabedrockutility.pack.processor;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.util.Identifier;
+import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
+import org.oryxel.viabedrockutility.pack.content.Content;
+
+import java.io.IOException;
+import java.util.Locale;
+
+public class TextureProcessor {
+    public static void process(final Content content) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+
+        for (final String path : content.getFilesDeep("textures/", "")) {
+            final Content.LazyImage image = content.getShortnameImage(path);
+            if (image == null) {
+                continue;
+            }
+
+            try {
+                client.getTextureManager().registerTexture(Identifier.ofVanilla(path.toLowerCase(Locale.ROOT)), new NativeImageBackedTexture(NativeImage.read(image.getPngBytes())));
+            } catch (final IOException e) {
+                ViaBedrockUtilityFabric.LOGGER.warn("Unable to register texture {}", path);
+            }
+        }
+    }
+}

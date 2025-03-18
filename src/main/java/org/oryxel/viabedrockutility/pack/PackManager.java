@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.oryxel.viabedrockutility.pack.content.Content;
 import org.oryxel.viabedrockutility.pack.definitions.EntityDefinitions;
 import org.oryxel.viabedrockutility.pack.definitions.ModelDefinitions;
+import org.oryxel.viabedrockutility.pack.processor.TextureProcessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,8 @@ public class PackManager {
 
         this.entityDefinitions = new EntityDefinitions(this);
         this.modelDefinitions = new ModelDefinitions(this);
+
+        TextureProcessor.process(content);
 
         // Test
         try {
