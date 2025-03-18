@@ -57,7 +57,7 @@ public class ViaBedrockPack implements ModInitializer {
 				final UUID uuid = buf.readUuid();
 				final int entityId = buf.readInt();
 				final double x = buf.readDouble(), y = buf.readDouble(), z = buf.readDouble();
-				final byte yaw = buf.readByte(), pitch = buf.readByte();
+				final float yaw = buf.readFloat(), pitch = buf.readFloat();
 
 				return new SpawnEntityData(name, uuid, entityId, x, y, z, yaw, pitch);
 			}

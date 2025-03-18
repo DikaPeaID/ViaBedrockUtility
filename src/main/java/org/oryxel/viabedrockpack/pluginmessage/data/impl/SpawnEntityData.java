@@ -15,6 +15,6 @@ public class SpawnEntityData extends BaseData {
     private final double x;
     private final double y;
     private final double z;
-    private final byte yaw;
-    private final byte pitch;
+    private final float yaw;
+    private final float pitch;
 }
