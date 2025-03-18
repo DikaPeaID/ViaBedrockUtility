@@ -20,7 +20,7 @@ public class PayloadHandler {
     private PackManager packManager;
 
     public void handle(final BasePayload payload) {
-        if (this.packManager == null) {
+        if (this.packManager != ViaBedrockUtility.getInstance().getPackManager()) {
             this.packManager = ViaBedrockUtility.getInstance().getPackManager();
         }
 
