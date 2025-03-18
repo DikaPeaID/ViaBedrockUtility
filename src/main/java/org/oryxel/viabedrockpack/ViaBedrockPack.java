@@ -25,7 +25,6 @@ import org.oryxel.viabedrockpack.pluginmessage.BedrockMessageHandler;
 import org.oryxel.viabedrockpack.pluginmessage.data.BaseData;
 import org.oryxel.viabedrockpack.pluginmessage.data.impl.CustomEntityData;
 import org.oryxel.viabedrockpack.pluginmessage.data.impl.SpawnEntityData;
-import org.oryxel.viabedrockpack.util.GeometryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +40,7 @@ public class ViaBedrockPack implements ModInitializer {
 
 	public static final PacketCodec<PacketByteBuf, BaseData> STREAM_CODEC = PacketCodec.of(null, buf -> {
 		int type = buf.readInt();
+		System.out.println(type);
 		switch (type) {
 			case 1 -> {
 				final String name = CustomEntityData.readString(buf);

@@ -37,11 +37,19 @@ public class BedrockMessageHandler {
             return;
         }
 
+        final CustomEntityManager.Data data1 = CustomEntityManager.get(data.getName());
+        if (data1 == null) {
+            return;
+        }
+
         double d = data.getX();
         double e = data.getY();
         double f = data.getZ();
         float g = data.getYaw();
         float h = data.getPitch();
+
+        entity.texture = data1.texture();
+        entity.model = data1.model();
 
         entity.updateTrackedPosition(d, e, f);
         entity.prevBodyYaw = entity.prevHeadYaw = entity.bodyYaw = data.getYaw();
