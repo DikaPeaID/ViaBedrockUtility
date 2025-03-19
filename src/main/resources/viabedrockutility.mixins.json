@@ -12,6 +12,7 @@
     "pack.ServerResourcePackLoaderMixin",
     "render.ModelPartMixin",
     "render.feature.CapeFeatureRendererMixin",
-    "render.dispatcher.EntityRenderDispatcherMixin"
+    "render.dispatcher.EntityRenderDispatcherMixin",
+    "MinecraftClientMixin"
   ]
 }

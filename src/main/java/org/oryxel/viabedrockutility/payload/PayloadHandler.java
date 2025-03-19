@@ -32,8 +32,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 public class PayloadHandler {
-    @Getter
     private final Map<String, CustomPlayerRenderer> cachedPlayerRenderers = new ConcurrentHashMap<>();
     private final Map<String, SkinInfo> cachedSkinInfo = new ConcurrentHashMap<>();
     private PackManager packManager;

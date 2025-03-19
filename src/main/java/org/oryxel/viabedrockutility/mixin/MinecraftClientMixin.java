@@ -1,0 +1,22 @@
+package org.oryxel.viabedrockutility.mixin;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import org.oryxel.viabedrockutility.ViaBedrockUtility;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(MinecraftClient.class)
+public class MinecraftClientMixin {
+    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;Z)V", at = @At("HEAD"))
+    private void disconnect(Screen disconnectionScreen, boolean transferring, CallbackInfo ci) {
+        if (ViaBedrockUtility.getInstance().getPayloadHandler() == null) {
+            return;
+        }
+
+        ViaBedrockUtility.getInstance().getPayloadHandler().getCachedPlayerRenderers().clear();
+        ViaBedrockUtility.getInstance().getPayloadHandler().getCachedSkinInfo().clear();
+    }
+}
