@@ -52,6 +52,7 @@ public class CustomEntityRenderer extends MobEntityRenderer<CustomEntity, Living
 
         // No idea why but it works so yeah!
         livingEntityRenderState.bodyYaw = MathHelper.lerpAngleDegrees(f, livingEntity.prevYaw, livingEntity.getYaw());
+        livingEntity.bodyYaw = livingEntity.headYaw = livingEntityRenderState.bodyYaw;
 
         if (livingEntity.model != this.model) {
             this.model = livingEntity.model;
