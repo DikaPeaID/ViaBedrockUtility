@@ -7,6 +7,7 @@ import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.oryxel.viabedrockutility.entity.CustomEntity;
 import org.oryxel.viabedrockutility.entity.renderer.model.CustomEntityModel;
@@ -48,6 +49,9 @@ public class CustomEntityRenderer extends MobEntityRenderer<CustomEntity, Living
     @Override
     public void updateRenderState(CustomEntity livingEntity, LivingEntityRenderState livingEntityRenderState, float f) {
         super.updateRenderState(livingEntity, livingEntityRenderState, f);
+
+        // No idea why but it works so yeah!
+        livingEntityRenderState.bodyYaw = MathHelper.lerpAngleDegrees(f, livingEntity.prevYaw, livingEntity.getYaw());
 
         if (livingEntity.model != this.model) {
             this.model = livingEntity.model;
