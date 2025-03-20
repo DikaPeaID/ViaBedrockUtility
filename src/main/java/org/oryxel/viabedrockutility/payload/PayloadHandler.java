@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.Dilation;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
@@ -107,6 +108,9 @@ public class PayloadHandler {
         ((PlayerSkinFieldAccessor)entry).setPlayerSkin(builder::build);
     }
 
+    private static final List<String> HARDCODED_GEOMETRY_IDENTIFIERS = List.of(
+            "geometry.humanoid.custom", "geometry.humanoid.customSlim");
+
     public void handle(final SkinDataPayload payload) {
         final SkinInfo info = this.cachedSkinInfo.get(payload.getPlayerUuid());
         if (info == null) {
@@ -146,26 +150,6 @@ public class PayloadHandler {
             }
         }
 
-        if (info.getGeometryRaw().isEmpty()) {
-            return;
-        }
-
-        final List<BedrockGeometryModel> geometries;
-        try {
-            final JsonObject object = JsonParser.parseString(info.getGeometryRaw()).getAsJsonObject();
-            geometries = BedrockGeometryModel.fromJson(object);
-        } catch (final Exception ignored) {
-            return;
-        }
-
-        if (geometries.isEmpty()) {
-            return;
-        }
-
-        final EntityRendererFactory.Context entityContext = new EntityRendererFactory.Context(client.getEntityRenderDispatcher(),
-                client.getItemModelManager(), client.getMapRenderer(), client.getBlockRenderManager(),
-                client.getResourceManager(), client.getLoadedEntityModels(), new EquipmentModelLoader(), client.textRenderer);
-
         // Ex: skinResourcePatch={"geometry":{"default":"geometry.humanoid.custom.1742391406.1704"}}
         String requiredGeometry = null;
         try {
@@ -173,22 +157,65 @@ public class PayloadHandler {
                     .getAsJsonObject("geometry").get("default").getAsString();
         } catch (Exception ignored) {}
 
-        BedrockGeometryModel geometry = geometries.getFirst();
-        if (requiredGeometry != null) {
-            for (final BedrockGeometryModel geometryModel : geometries) {
-                if (geometryModel.getIdentifier().equals(requiredGeometry)) {
-                    geometry = geometryModel;
-                    requiredGeometry = geometryModel.getIdentifier();
-                    break;
+        // Hardcoded I know...
+        boolean slim = requiredGeometry != null && "geometry.humanoid.customSlim".contains(requiredGeometry);
+
+        PlayerEntityModel model = null;
+        if (!info.getGeometryRaw().isEmpty()) {
+            final List<BedrockGeometryModel> geometries;
+            try {
+                final JsonObject object = JsonParser.parseString(info.getGeometryRaw()).getAsJsonObject();
+                geometries = BedrockGeometryModel.fromJson(object);
+
+                if (!geometries.isEmpty()) {
+                    BedrockGeometryModel geometry = geometries.getFirst();
+                    if (requiredGeometry != null) {
+                        for (final BedrockGeometryModel geometryModel : geometries) {
+                            if (geometryModel.getIdentifier().equals(requiredGeometry)) {
+                                geometry = geometryModel;
+                                break;
+                            }
+                        }
+                    }
+
+                    model = (PlayerEntityModel) GeometryUtil.buildModel(geometry, true, slim);
                 }
+            } catch (final Exception ignored) {
             }
         }
 
-        // Hardcoded I know...
-        // TODO: Figure this out based off the model, not the identifier.
-        boolean slim = requiredGeometry != null && (requiredGeometry.contains("humanoid.customSlim") || requiredGeometry.contains("humanoid.slim"));
+        if (model == null) {
+            if (requiredGeometry == null) {
+                return;
+            }
 
-        final PlayerEntityModel model = (PlayerEntityModel) GeometryUtil.buildModel(geometry, true, slim);
+            boolean found = false;
+
+            // HARDCODED_GEOMETRY_IDENTIFIERS.contains(requiredGeometry) won't work which is weird.
+            // By the way for the same reason requiredGeometry.equals(identifier) won't work either but identifier.equals(requiredGeometry) works!
+            for (final String i : HARDCODED_GEOMETRY_IDENTIFIERS) {
+                if (i.equals(requiredGeometry)) {
+                    requiredGeometry = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                System.out.println(requiredGeometry);
+                return;
+            }
+        }
+
+        if (model == null) {
+            // This is likely a classic skin with hardcoded identifier! TODO: 128x128
+            model = new PlayerEntityModel(PlayerEntityModel.getTexturedModelData(Dilation.NONE, slim).getRoot().createPart(64, 64), slim);
+            System.out.println("Hardcoded!");
+        }
+
+        final EntityRendererFactory.Context entityContext = new EntityRendererFactory.Context(client.getEntityRenderDispatcher(),
+                client.getItemModelManager(), client.getMapRenderer(), client.getBlockRenderManager(),
+                client.getResourceManager(), client.getLoadedEntityModels(), new EquipmentModelLoader(), client.textRenderer);
         this.cachedPlayerRenderers.put(payload.getPlayerUuid(), new CustomPlayerRenderer(entityContext, model, slim, identifier));
 
         if (client.getNetworkHandler() == null) {
