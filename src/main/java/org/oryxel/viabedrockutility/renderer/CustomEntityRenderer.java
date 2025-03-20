@@ -32,7 +32,7 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
             matrices.scale(-1.0F, -1.0F, 1.0F);
             matrices.translate(0.0F, -1.501F, 0.0F);
 
-            RenderLayer renderLayer = RenderLayer.getEntityTranslucent(model.texture);
+            RenderLayer renderLayer = RenderLayer.getItemEntityTranslucentCull(model.texture);
             if (renderLayer != null) {
                 VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
                 model.model.render(matrices, vertexConsumer, light, OverlayTexture.packUv(0, 10));
