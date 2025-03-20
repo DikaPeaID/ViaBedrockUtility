@@ -1,65 +1,67 @@
 package org.oryxel.viabedrockutility.renderer;
 
-import net.minecraft.client.render.Frustum;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.MobEntityRenderer;
-import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.render.entity.state.EntityRenderState;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import org.jetbrains.annotations.Nullable;
-import org.oryxel.viabedrockutility.entity.CustomEntity;
-import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
+import net.minecraft.util.math.RotationAxis;
 
-public class CustomEntityRenderer extends MobEntityRenderer<CustomEntity, LivingEntityRenderState, CustomEntityModel> {
-    private Identifier texture;
+import java.util.List;
 
-    public CustomEntityRenderer(EntityRendererFactory.Context context, CustomEntityModel entityModel, Identifier texture) {
-        super(context, entityModel, 0);
-        this.texture = texture;
+public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, CustomEntityRenderer.CustomEntityRenderState> {
+    private final List<Model> models;
+
+    public CustomEntityRenderer(final List<Model> models, EntityRendererFactory.Context context) {
+        super(context);
+        this.models = models;
     }
 
     @Override
-    public Identifier getTexture(LivingEntityRenderState state) {
-        return this.texture;
-    }
+    public void render(CustomEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        for (Model model : this.models) {
+            matrices.push();
 
-    @Override
-    public boolean shouldRender(CustomEntity entity, Frustum frustum, double x, double y, double z) {
-        double d = 64.0F * Entity.getRenderDistanceMultiplier();
-        return entity.squaredDistanceTo(x, y, z) <= d * d;
-    }
+            this.setupTransforms(state, matrices);
+            matrices.scale(-1.0F, -1.0F, 1.0F);
+            matrices.translate(0.0F, -1.501F, 0.0F);
 
-    @Override
-    protected boolean canBeCulled(CustomEntity entity) {
-        return false;
-    }
+            RenderLayer renderLayer = RenderLayer.getEntityTranslucent(model.texture);
+            if (renderLayer != null) {
+                VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
+                model.model.render(matrices, vertexConsumer, light, OverlayTexture.packUv(0, 10));
+            }
 
-    @Override
-    protected @Nullable RenderLayer getRenderLayer(LivingEntityRenderState state, boolean showBody, boolean translucent, boolean showOutline) {
-        return super.getRenderLayer(state, showBody, true, showOutline);
-    }
-
-    @Override
-    public LivingEntityRenderState createRenderState() {
-        return new LivingEntityRenderState();
-    }
-
-    @Override
-    public void updateRenderState(CustomEntity livingEntity, LivingEntityRenderState livingEntityRenderState, float f) {
-        super.updateRenderState(livingEntity, livingEntityRenderState, f);
-
-        // No idea why but it works so yeah!
-        livingEntityRenderState.bodyYaw = MathHelper.lerpAngleDegrees(f, livingEntity.prevYaw, livingEntity.getYaw());
-        livingEntity.bodyYaw = livingEntity.headYaw = livingEntityRenderState.bodyYaw;
-
-        if (livingEntity.model != this.model) {
-            this.model = livingEntity.model;
+            matrices.pop();
         }
+    }
 
-        if (livingEntity.texture != this.texture) {
-            this.texture = livingEntity.texture;
-        }
+    @Override
+    public void updateRenderState(T entity, CustomEntityRenderState state, float tickDelta) {
+        super.updateRenderState(entity, state, tickDelta);
+        state.yaw = entity.getYaw(tickDelta);
+        // state.pitch = entity.getPitch(tickDelta);
+    }
+
+    private void setupTransforms(CustomEntityRenderState state, MatrixStack matrices) {
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180 - state.yaw));
+    }
+
+    @Override
+    public CustomEntityRenderState createRenderState() {
+        return new CustomEntityRenderState();
+    }
+
+    public record Model(EntityModel<?> model, Identifier texture) {
+    }
+
+    public static class CustomEntityRenderState extends EntityRenderState {
+        private float yaw, pitch;
     }
 }

@@ -2,13 +2,13 @@ package org.oryxel.viabedrockutility.util;
 
 import com.google.common.collect.Maps;
 import net.minecraft.client.model.*;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.math.Direction;
 import org.cube.converter.model.element.Cube;
 import org.cube.converter.model.element.Parent;
 import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.cube.converter.util.element.UVMap;
-import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
 
 import java.util.*;
 
@@ -35,7 +35,7 @@ public final class GeometryUtil {
             // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
             for (final Cube cube : bone.getCubes().values()) {
                 final float sizeX = cube.getSize().getX(), sizeY = cube.getSize().getY(), sizeZ = cube.getSize().getZ();
-                final float inflate = cube.getInflate() + 1.0E-3F;
+                final float inflate = cube.getInflate();
 
                 final UVMap uvMap = cube.getUvMap().clone();
 
@@ -46,9 +46,9 @@ public final class GeometryUtil {
                     }
                 }
 
-                // Y have to be flipped for whatever reason, also have to offset down by 1.5 block (which is 24 in model size)?
-                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, cube.getPosition().getX(), -(cube.getPosition().getY() - 24 + sizeY), cube.getPosition().getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
-                correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.isMirror());
+                // Y have to be flipped for whatever reason, also have to offset down by 1.501 block (which is 24.016 in model size)?
+                final ModelPart.Cuboid cuboid = new ModelPart.Cuboid(0, 0, cube.getPosition().getX(), -(cube.getPosition().getY() - 24.016F + sizeY), cube.getPosition().getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.getInflate(), cube.isMirror());
 
                 final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of(HARDCODED_INDICATOR, new ModelPart(List.of(), Map.of())));
                 cubePart.setPivot(cube.getPivot().getX(), -cube.getPivot().getY() + 24, cube.getPivot().getZ());
@@ -117,7 +117,7 @@ public final class GeometryUtil {
             ensureAvailable(stringToPart, stringToPart.get("body").children, "jacket");
         }
 
-        return player ? new PlayerEntityModel(root.part(), slim) : new CustomEntityModel(root.part());
+        return player ? new PlayerEntityModel(root.part(), slim) : new EntityModel<>(root.part()) {};
     }
 
     private static String adjustFormatting(String name) {
@@ -144,10 +144,17 @@ public final class GeometryUtil {
     private record PartInfo(String parent, ModelPart part, Map<String, ModelPart> children) {
     }
 
-    private static void correctUv(final ModelPart.Cuboid cuboid, final Set<Direction> set, final UVMap map, final float uvWidth, final float uvHeight, final boolean mirror) {
+    private static void correctUv(final ModelPart.Cuboid cuboid, final Set<Direction> set, final UVMap map, final float uvWidth, final float uvHeight, final float inflate, final boolean mirror) {
         float x = cuboid.minX, y = cuboid.minY, z = cuboid.minZ;
-
         float f = cuboid.maxX, g = cuboid.maxY, h = cuboid.maxZ;
+
+        x -= inflate;
+        y -= inflate;
+        z -= inflate;
+        f += inflate;
+        g += inflate;
+        h += inflate;
+
         if (mirror) {
             float i = f;
             f = x;

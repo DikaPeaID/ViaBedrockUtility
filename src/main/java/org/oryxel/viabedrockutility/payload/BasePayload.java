@@ -13,6 +13,9 @@ import org.oryxel.viabedrockutility.payload.impl.entity.*;
 import org.oryxel.viabedrockutility.payload.impl.skin.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Getter
@@ -31,8 +34,14 @@ public class BasePayload implements CustomPayload {
                 ViaBedrockUtility.getInstance().setViaBedrockPresent(true);
                 return new BasePayload();
             }
-            case SPAWN_REQUEST -> {
-                return new SpawnRequestPayload(BasePayload.readString(buf), BasePayload.readString(buf), buf.readVarInt(), buf.readUuid(), buf.readDouble(), buf.readDouble(), buf.readDouble(), buf.readByte(), buf.readByte(), buf.readByte());
+            case MODEL_REQUEST -> {
+                final UUID uuid = buf.readUuid();
+                final ModelRequestPayload.Model[] models = new ModelRequestPayload.Model[buf.readInt()];
+                for (int i = 0; i < models.length; i++) {
+                    models[i] = new ModelRequestPayload.Model(readString(buf), readString(buf));
+                }
+
+                return new ModelRequestPayload(uuid, models);
             }
 
             case ANIMATE -> {
