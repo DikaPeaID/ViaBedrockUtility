@@ -35,13 +35,14 @@ public class BasePayload implements CustomPayload {
                 return new BasePayload();
             }
             case MODEL_REQUEST -> {
+                final String identifier = readString(buf);
                 final UUID uuid = buf.readUuid();
                 final ModelRequestPayload.Model[] models = new ModelRequestPayload.Model[buf.readInt()];
                 for (int i = 0; i < models.length; i++) {
                     models[i] = new ModelRequestPayload.Model(readString(buf), readString(buf));
                 }
 
-                return new ModelRequestPayload(uuid, models);
+                return new ModelRequestPayload(identifier, uuid, models);
             }
 
             case ANIMATE -> {

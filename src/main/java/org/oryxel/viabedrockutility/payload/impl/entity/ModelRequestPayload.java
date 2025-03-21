@@ -9,6 +9,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Getter
 public class ModelRequestPayload extends BasePayload {
+    private final String identifier;
     private final UUID uuid;
     private final Model[] models;
 
