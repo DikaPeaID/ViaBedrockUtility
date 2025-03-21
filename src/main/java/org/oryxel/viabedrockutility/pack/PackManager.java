@@ -5,6 +5,7 @@ import org.oryxel.viabedrockutility.pack.content.Content;
 import org.oryxel.viabedrockutility.pack.definitions.EntityDefinitions;
 import org.oryxel.viabedrockutility.pack.definitions.MaterialDefinitions;
 import org.oryxel.viabedrockutility.pack.definitions.ModelDefinitions;
+import org.oryxel.viabedrockutility.pack.definitions.RenderControllerDefinitions;
 import org.oryxel.viabedrockutility.pack.processor.TextureProcessor;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @Getter
 public class PackManager {
     private final List<Content> packs;
+    private final RenderControllerDefinitions renderControllerDefinitions;
     private final EntityDefinitions entityDefinitions;
     private final ModelDefinitions modelDefinitions;
     private final MaterialDefinitions materialDefinitions;
@@ -19,6 +21,7 @@ public class PackManager {
     public PackManager(final List<Content> packs) {
         this.packs = packs;
 
+        this.renderControllerDefinitions = new RenderControllerDefinitions(this);
         this.entityDefinitions = new EntityDefinitions(this);
         this.modelDefinitions = new ModelDefinitions(this);
         this.materialDefinitions = new MaterialDefinitions(this);
