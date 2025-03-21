@@ -1,5 +1,5 @@
 // This file is part of ViaBedrock - https://github.com/RaphiMC/ViaBedrock - Copyright 2025 - 2026
-package org.oryxel.viabedrockutility.pack.definitions;
+package org.oryxel.viabedrockutility.pack.definitions.controller;
 
 import lombok.Getter;
 import org.cube.converter.data.bedrock.controller.BedrockRenderController;

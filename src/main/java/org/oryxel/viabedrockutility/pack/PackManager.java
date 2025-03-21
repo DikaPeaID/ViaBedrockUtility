@@ -2,10 +2,8 @@ package org.oryxel.viabedrockutility.pack;
 
 import lombok.Getter;
 import org.oryxel.viabedrockutility.pack.content.Content;
-import org.oryxel.viabedrockutility.pack.definitions.EntityDefinitions;
-import org.oryxel.viabedrockutility.pack.definitions.MaterialDefinitions;
-import org.oryxel.viabedrockutility.pack.definitions.ModelDefinitions;
-import org.oryxel.viabedrockutility.pack.definitions.RenderControllerDefinitions;
+import org.oryxel.viabedrockutility.pack.definitions.*;
+import org.oryxel.viabedrockutility.pack.definitions.controller.*;
 import org.oryxel.viabedrockutility.pack.processor.TextureProcessor;
 
 import java.util.List;
