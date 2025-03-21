@@ -1,9 +1,6 @@
 package org.oryxel.viabedrockutility.renderer;
 
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -40,6 +37,12 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
 
             matrices.pop();
         }
+    }
+
+    @Override
+    public boolean shouldRender(T entity, Frustum frustum, double x, double y, double z) {
+        double d = 64.0F * Entity.getRenderDistanceMultiplier();
+        return entity.squaredDistanceTo(x, y, z) <= d * d;
     }
 
     @Override
