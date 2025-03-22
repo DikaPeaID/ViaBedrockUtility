@@ -1,6 +1,5 @@
 package org.oryxel.viabedrockutility.material;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.io.IOUtils;
 import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
@@ -16,7 +15,7 @@ import java.util.Map;
 // https://wiki.bedrock.dev/visuals/materials
 // This is all I can find on this, eh so prob not that accurate.
 public class VanillaMaterials {
-    private static final Map<String, Material> NAME_TO_MATERIAL = new HashMap<>();
+    public static final Map<String, Material> NAME_TO_MATERIAL = new HashMap<>();
 
     public static void init() {
         final InputStream stream = VanillaMaterials.class.getResourceAsStream("/assets/viabedrockutility/vanilla_packs/entity.material");
@@ -34,7 +33,7 @@ public class VanillaMaterials {
         }
 
         try {
-            NAME_TO_MATERIAL.putAll(Material.parse(JsonParser.parseString(content).getAsJsonObject()));
+            NAME_TO_MATERIAL.putAll(Material.parse(new HashMap<>(), JsonParser.parseString(content).getAsJsonObject()));
         } catch (Exception exception) {
             ViaBedrockUtilityFabric.LOGGER.error("Failed to parse vanilla material file!");
             throw new RuntimeException(exception);
