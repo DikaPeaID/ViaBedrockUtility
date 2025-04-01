@@ -13,8 +13,6 @@ import org.oryxel.viabedrockutility.payload.impl.entity.*;
 import org.oryxel.viabedrockutility.payload.impl.skin.*;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -36,13 +34,14 @@ public class BasePayload implements CustomPayload {
             }
             case MODEL_REQUEST -> {
                 final String identifier = readString(buf);
+                final long bitmask = buf.readLong();
                 final UUID uuid = buf.readUuid();
                 final ModelRequestPayload.Model[] models = new ModelRequestPayload.Model[buf.readInt()];
                 for (int i = 0; i < models.length; i++) {
                     models[i] = new ModelRequestPayload.Model(readString(buf), readString(buf));
                 }
 
-                return new ModelRequestPayload(identifier, uuid, models);
+                return new ModelRequestPayload(identifier, bitmask, uuid, models);
             }
 
             case ANIMATE -> {

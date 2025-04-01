@@ -12,10 +12,10 @@ import net.minecraft.util.math.RotationAxis;
 
 import java.util.List;
 
-public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, CustomEntityRenderer.CustomEntityRenderState> {
+public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T, BaseCustomEntityRenderer.CustomEntityRenderState> {
     private final List<Model> models;
 
-    public CustomEntityRenderer(final List<Model> models, EntityRendererFactory.Context context) {
+    public BaseCustomEntityRenderer(final List<Model> models, EntityRendererFactory.Context context) {
         super(context);
         this.models = models;
     }
@@ -23,6 +23,8 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
     @Override
     public void render(CustomEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         for (Model model : this.models) {
+            this.onRenderModel(model);
+
             matrices.push();
 
             this.setupTransforms(state, matrices);
@@ -39,6 +41,8 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
         }
     }
 
+    public void onRenderModel(final Model model) {}
+
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double x, double y, double z) {
         double d = 64.0F * Entity.getRenderDistanceMultiplier();
@@ -49,7 +53,7 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
     public void updateRenderState(T entity, CustomEntityRenderState state, float tickDelta) {
         super.updateRenderState(entity, state, tickDelta);
         state.yaw = entity.getYaw(tickDelta);
-        // state.pitch = entity.getPitch(tickDelta);
+        state.distanceTraveled = entity.distanceTraveled;
     }
 
     private void setupTransforms(CustomEntityRenderState state, MatrixStack matrices) {
@@ -65,6 +69,7 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
     }
 
     public static class CustomEntityRenderState extends EntityRenderState {
-        private float yaw, pitch;
+        private float yaw;
+        private float distanceTraveled;
     }
 }
