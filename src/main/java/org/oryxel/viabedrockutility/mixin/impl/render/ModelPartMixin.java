@@ -4,6 +4,7 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Quaternionf;
 import org.oryxel.viabedrockutility.mixin.interfaces.IModelPart;
+import org.oryxel.viabedrockutility.util.MathUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,7 +20,6 @@ import java.util.Map;
 @Mixin(ModelPart.class)
 public abstract class ModelPartMixin implements IModelPart {
     @Shadow public float originX;
-    @Shadow public float originY;
     @Shadow public float originZ;
 
     @Shadow @Final private Map<String, ModelPart> children;
@@ -38,7 +38,9 @@ public abstract class ModelPartMixin implements IModelPart {
     @Inject(method = "applyTransform", at = @At("HEAD"))
     public void render(MatrixStack matrices, CallbackInfo ci) {
         matrices.translate(this.pivotX / 16.0F, this.pivotY / 16.0F, this.pivotZ / 16.0F);
-        matrices.multiply((new Quaternionf()).rotationZYX(this.customPitch, this.customYaw, this.customRoll));
+        if (this.customPitch != 0.0F || this.customYaw != 0.0F || this.customRoll != 0.0F) {
+            matrices.multiply((new Quaternionf()).rotationXYZ(this.customPitch * MathUtil.DEGREES_TO_RADIANS, this.customYaw * MathUtil.DEGREES_TO_RADIANS, this.customRoll * MathUtil.DEGREES_TO_RADIANS));
+        }
         matrices.translate(-this.pivotX / 16.0F, -this.pivotY / 16.0F, -this.pivotZ / 16.0F);
     }
 

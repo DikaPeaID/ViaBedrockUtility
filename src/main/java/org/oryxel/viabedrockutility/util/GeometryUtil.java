@@ -27,14 +27,14 @@ public final class GeometryUtil {
             final ModelPart part = new ModelPart(List.of(), children);
 
             boolean neededOffset = switch (bone.getName().toLowerCase(Locale.ROOT)) {
-                case "rightarm", "leftarm" -> true;
+                case "rightarm", "leftarm", "leftleg", "rightleg" -> player;
                 default -> false;
             };
 
             ((IModelPart)((Object)part)).viaBedrockUtility$setVBUModel();
             ((IModelPart)((Object)part)).viaBedrockUtility$setNeededOffset(neededOffset);
             ((IModelPart)((Object)part)).viaBedrockUtility$setPivot(bone.getPivot().getX(), -bone.getPivot().getY() + 24.016F, bone.getPivot().getZ());
-            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(bone.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, bone.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
+            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(bone.getRotation().getX() , bone.getRotation().getY(), bone.getRotation().getZ());
 
             // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
             for (final Cube cube : bone.getCubes().values()) {
@@ -56,7 +56,7 @@ public final class GeometryUtil {
 
                 final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of());
                 ((IModelPart)((Object)cubePart)).viaBedrockUtility$setPivot(cube.getPivot().getX(), -cube.getPivot().getY() + 24.016F, cube.getPivot().getZ());
-                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setAngles(cube.getRotation().getX() * MathUtil.DEGREES_TO_RADIANS, cube.getRotation().getY() * MathUtil.DEGREES_TO_RADIANS, cube.getRotation().getZ() * MathUtil.DEGREES_TO_RADIANS);
+                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setAngles(cube.getRotation().getX(), cube.getRotation().getY(), cube.getRotation().getZ());
                 ((IModelPart)((Object)cubePart)).viaBedrockUtility$setVBUModel();
                 ((IModelPart)((Object)cubePart)).viaBedrockUtility$setNeededOffset(neededOffset);
                 children.put(cube.getParent() + cube.hashCode(), cubePart);
