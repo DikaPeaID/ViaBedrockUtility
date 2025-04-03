@@ -4,6 +4,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
 import org.oryxel.viabedrockutility.ViaBedrockUtility;
+import org.oryxel.viabedrockutility.payload.handler.CustomEntityPayloadHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,9 +31,9 @@ public abstract class EntityRenderDispatcherMixin {
             return;
         }
 
-        final EntityRenderer<?, ?> renderer = ViaBedrockUtility.getInstance().getPayloadHandler().getCachedRenderers().get(entity.getUuid());
-        if (renderer != null) {
-            cir.setReturnValue((EntityRenderer<? super T, ?>) renderer);
+        final CustomEntityPayloadHandler.CustomEntityData data = ViaBedrockUtility.getInstance().getPayloadHandler().getCachedCustomEntities().get(entity.getUuid());
+        if (data != null && data.getRenderer() != null) {
+            cir.setReturnValue((EntityRenderer<? super T, ?>) data.getRenderer());
         }
     }
 }

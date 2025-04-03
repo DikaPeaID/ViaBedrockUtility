@@ -1,5 +1,8 @@
 package org.oryxel.viabedrockutility.payload.handler;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.equipment.EquipmentModelLoader;
@@ -28,6 +31,7 @@ import team.unnamed.mocha.runtime.value.Value;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CustomEntityPayloadHandler extends PayloadHandler {
     private final Map<UUID, Scope> cachedScopes = new ConcurrentHashMap<>();
@@ -104,19 +108,51 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
 
         this.cachedScopes.put(payload.getUuid(), scope);
 
-        final List<BaseCustomEntityRenderer.Model> models = new ArrayList<>();
-        for (ModelRequestPayload.Model model : payload.getModels()) {
-            final Identifier texture = Identifier.of(model.texture().toLowerCase(Locale.ROOT));
-            final BedrockGeometryModel geometry = this.packManager.getModelDefinitions().getEntityModels().get(model.geometry());
-            if (geometry == null) {
-                continue;
+        final CustomEntityData data = this.cachedCustomEntities.get(payload.getUuid());
+        if (data == null) {
+            final Set<String> keySet = new HashSet<>();
+            final List<BaseCustomEntityRenderer.Model> models = new CopyOnWriteArrayList<>();
+            for (ModelRequestPayload.Model model : payload.getModels()) {
+                final String key = model.geometry() + "_" + model.texture() + "_" + model.renderControllerIdentifier();
+                final Identifier texture = Identifier.of(model.texture().toLowerCase(Locale.ROOT));
+
+                BedrockGeometryModel geometry = this.packManager.getModelDefinitions().getEntityModels().get(model.geometry());
+                if (geometry == null) {
+                    continue;
+                }
+
+                final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
+                models.add(new BaseCustomEntityRenderer.Model(key, (EntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+
+                keySet.add(key);
             }
 
-            final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
-            models.add(new BaseCustomEntityRenderer.Model((EntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
-        }
+            this.cachedCustomEntities.put(payload.getUuid(), new CustomEntityData(keySet, new CustomEntityRendererImpl<>(models, context)));
+        } else {
+            final Set<String> old = new HashSet<>(data.availableModels);
+            data.availableModels.clear();
+            for (ModelRequestPayload.Model model : payload.getModels()) {
+                final String key = model.geometry() + "_" + model.texture() + "_" + model.renderControllerIdentifier();
+                final Identifier texture = Identifier.of(model.texture().toLowerCase(Locale.ROOT));
 
-        this.cachedRenderers.put(payload.getUuid(), new CustomEntityRendererImpl<>(models, context));
+                BedrockGeometryModel geometry = this.packManager.getModelDefinitions().getEntityModels().get(model.geometry());
+                if (geometry == null) {
+                    continue;
+                }
+
+                if (old.contains(key)) {
+                    data.availableModels.add(key);
+                    continue;
+                }
+
+                final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
+                data.getRenderer().getModels().add(new BaseCustomEntityRenderer.Model(key, (EntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+
+                data.availableModels.add(key);
+            }
+
+            data.getRenderer().getModels().removeIf(model -> !data.availableModels.contains(model.key()));
+        }
     }
 
     public Material evalMaterial(final Scope baseScope, EntityDefinitions.EntityDefinition definition, BedrockRenderController controller) {
@@ -161,5 +197,13 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
         }
         arrayBinding.block();
         return arrayBinding;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class CustomEntityData {
+        private final Set<String> availableModels;
+        private CustomEntityRendererImpl<?> renderer;
     }
 }

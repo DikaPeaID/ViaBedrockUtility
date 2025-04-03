@@ -19,6 +19,7 @@ import org.oryxel.viabedrockutility.ViaBedrockUtility;
 import org.oryxel.viabedrockutility.fabric.ViaBedrockUtilityFabric;
 import org.oryxel.viabedrockutility.mixin.impl.accessor.PlayerSkinFieldAccessor;
 import org.oryxel.viabedrockutility.pack.PackManager;
+import org.oryxel.viabedrockutility.payload.handler.CustomEntityPayloadHandler;
 import org.oryxel.viabedrockutility.payload.impl.entity.ModelRequestPayload;
 import org.oryxel.viabedrockutility.payload.impl.skin.BaseSkinPayload;
 import org.oryxel.viabedrockutility.payload.impl.skin.CapeDataPayload;
@@ -34,8 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public class PayloadHandler {
+    protected final Map<UUID, CustomEntityPayloadHandler.CustomEntityData> cachedCustomEntities = new ConcurrentHashMap<>();
     protected final Map<UUID, EntityRenderer<?, ?>> cachedPlayerRenderers = new ConcurrentHashMap<>();
-    protected final Map<UUID, EntityRenderer<?, ?>> cachedRenderers = new ConcurrentHashMap<>();
     protected final Map<UUID, Identifier> cachedPlayerCapes = new ConcurrentHashMap<>();
     protected final Map<UUID, SkinInfo> cachedSkinInfo = new ConcurrentHashMap<>();
     protected PackManager packManager;

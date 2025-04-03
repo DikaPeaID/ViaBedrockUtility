@@ -1,5 +1,6 @@
 package org.oryxel.viabedrockutility.renderer;
 
+import lombok.Getter;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
@@ -13,6 +14,7 @@ import org.oryxel.viabedrockutility.material.data.Material;
 
 import java.util.List;
 
+@Getter
 public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T, BaseCustomEntityRenderer.CustomEntityRenderState> {
     private final List<Model> models;
 
@@ -66,7 +68,7 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
         return new CustomEntityRenderState();
     }
 
-    public record Model(EntityModel<?> model, Identifier texture, Material material) {
+    public record Model(String key, EntityModel<?> model, Identifier texture, Material material) {
     }
 
     public static class CustomEntityRenderState extends EntityRenderState {
