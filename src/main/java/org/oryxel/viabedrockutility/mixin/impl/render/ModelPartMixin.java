@@ -57,24 +57,28 @@ public abstract class ModelPartMixin implements IModelPart {
     private Vector3f defaultOffset = new Vector3f();
 
     @Unique private boolean alreadySetRotation = false;
-    @Unique private boolean alreadySetPivot = false;
 
     @Inject(method = "applyTransform", at = @At("HEAD"))
     public void render(MatrixStack matrices, CallbackInfo ci) {
+        // Offset is needed for rotating too!
+        matrices.translate(this.offsetX / 16.0F, this.offsetY / 16.0F, this.offsetZ / 16.0F);
+
         matrices.translate(this.pivotX / 16.0F, this.pivotY / 16.0F, this.pivotZ / 16.0F);
         if (this.customPitch != 0.0F || this.customYaw != 0.0F || this.customRoll != 0.0F) {
             matrices.multiply((new Quaternionf()).rotationXYZ(this.customPitch * MathUtil.DEGREES_TO_RADIANS, this.customYaw * MathUtil.DEGREES_TO_RADIANS, this.customRoll * MathUtil.DEGREES_TO_RADIANS));
         }
         matrices.translate(-this.pivotX / 16.0F, -this.pivotY / 16.0F, -this.pivotZ / 16.0F);
 
-        // Dang so we have to flip Y
-        if (this.offsetX != 0 || this.offsetY != 0 || this.offsetZ != 0) {
-            matrices.translate(this.offsetX / 16.0F, -(this.offsetY + 24.016) / 16.0F, this.offsetZ / 16.0F);
-        }
+        matrices.translate(-this.offsetX / 16.0F, -this.offsetY / 16.0F, -this.offsetZ / 16.0F);
     }
 
     @Inject(method = "applyTransform", at = @At("TAIL"))
     public void renderTail(MatrixStack matrices, CallbackInfo ci) {
+        // Do this after scale since well, this shouldn't be affected by scaling.
+        if (this.offsetX != 0 || this.offsetY != 0 || this.offsetZ != 0) {
+            matrices.translate(this.offsetX / 16.0F, this.offsetY / 16.0F, this.offsetZ / 16.0F);
+        }
+
         if (!this.isVBUModel || !this.neededOffset) {
             return;
         }
@@ -120,8 +124,6 @@ public abstract class ModelPartMixin implements IModelPart {
         this.traverse().toList().forEach(part -> {
             ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(this.viaBedrockUtility$defaultTransform.pitch(),
                     this.viaBedrockUtility$defaultTransform.yaw(), this.viaBedrockUtility$defaultTransform.roll());
-            ((IModelPart)((Object)part)).viaBedrockUtility$setPivot(this.viaBedrockUtility$defaultTransform.x(),
-                    this.viaBedrockUtility$defaultTransform.y(), this.viaBedrockUtility$defaultTransform.z());
             ((IModelPart)((Object)part)).viaBedrockUtility$setOffset(this.defaultOffset.x, this.defaultOffset.y, this.defaultOffset.z);
 
             this.xScale = this.yScale = this.zScale = 1;
@@ -130,14 +132,6 @@ public abstract class ModelPartMixin implements IModelPart {
 
     @Override
     public void viaBedrockUtility$setPivot(float x, float y, float z) {
-        if (!this.alreadySetPivot) {
-            this.viaBedrockUtility$defaultTransform = new ModelTransform(
-                    x, y, z,
-                    this.viaBedrockUtility$defaultTransform.pitch(), this.viaBedrockUtility$defaultTransform.yaw(),
-                    this.viaBedrockUtility$defaultTransform.roll(), 1, 1, 1);
-            this.alreadySetPivot = true;
-        }
-
         this.pivotX = x;
         this.pivotY = y;
         this.pivotZ = z;
@@ -146,7 +140,7 @@ public abstract class ModelPartMixin implements IModelPart {
     @Override
     public void viaBedrockUtility$setOffset(float x, float y, float z) {
         this.offsetX = x;
-        this.offsetY = y;
+        this.offsetY = -y;
         this.offsetZ = z;
     }
 

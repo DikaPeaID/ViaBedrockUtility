@@ -127,11 +127,13 @@ public class Animator {
 
             // No fucking idea, the description for this is too vague.
 //            if (!cube.getRelativeTo().isBlank() && cube.getRelativeTo().equalsIgnoreCase("entity")) {
-//
 //            }
-            if (update(UpdateType.POSITION, scope, part, this.position.get(key), cube.getPosition().getValue()) &&
-                    update(UpdateType.ROTATION, scope, part, this.rotation.get(key), cube.getRotation().getValue()) &&
-                    update(UpdateType.SCALE, scope, part, this.scale.get(key), cube.getScale().getValue())) {
+
+            boolean position = cube.getPosition() == null || update(UpdateType.POSITION, scope, part, this.position.get(key), cube.getPosition().getValue());
+            boolean rotation = cube.getRotation() == null || update(UpdateType.ROTATION, scope, part, this.rotation.get(key), cube.getRotation().getValue());
+            boolean scale = cube.getScale() == null || update(UpdateType.SCALE, scope, part, this.scale.get(key), cube.getScale().getValue());
+
+            if (position && rotation && scale) {
                 this.nothingToUpdate.add(key);
             }
         }
@@ -246,7 +248,13 @@ public class Animator {
             switch (type) {
                 case POSITION -> iPart.viaBedrockUtility$setOffset(valueX, valueY, valueZ);
                 case ROTATION -> iPart.viaBedrockUtility$setAngles(valueX, valueY, valueZ);
-                case SCALE -> iPart.viaBedrockUtility$setAngles(valueX, valueY, valueZ);
+                case SCALE -> {
+                    // We have to flip this (look at BaseCustomEntityRenderer or LivingEntityRenderer)
+                    // No need to flip yScale since well the y position itself is already flipped.
+                    part.xScale = -valueX;
+                    part.yScale = valueY;
+                    part.zScale = valueZ;
+                }
             }
         }
 
@@ -292,7 +300,7 @@ public class Animator {
         private float targetX, targetY, targetZ;
 
         public void lerp() {
-
+            // Ehm todo?
         }
 
         public boolean done() {
