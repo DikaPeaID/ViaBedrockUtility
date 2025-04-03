@@ -32,6 +32,9 @@ public abstract class ModelPartMixin implements IModelPart {
 
     @Shadow public abstract Stream<ModelPart> traverse();
 
+    @Shadow public float xScale;
+    @Shadow public float yScale;
+    @Shadow public float zScale;
     @Unique
     private String name = "";
 
@@ -120,6 +123,8 @@ public abstract class ModelPartMixin implements IModelPart {
             ((IModelPart)((Object)part)).viaBedrockUtility$setPivot(this.viaBedrockUtility$defaultTransform.x(),
                     this.viaBedrockUtility$defaultTransform.y(), this.viaBedrockUtility$defaultTransform.z());
             ((IModelPart)((Object)part)).viaBedrockUtility$setOffset(this.defaultOffset.x, this.defaultOffset.y, this.defaultOffset.z);
+
+            this.xScale = this.yScale = this.zScale = 1;
         });
     }
 

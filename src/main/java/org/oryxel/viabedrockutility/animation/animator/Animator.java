@@ -129,93 +129,128 @@ public class Animator {
 //            if (!cube.getRelativeTo().isBlank() && cube.getRelativeTo().equalsIgnoreCase("entity")) {
 //
 //            }
-
-            // Ehm.... shit code incoming, i guess?
-            boolean donePosition = false, doneRotation = true, doneScale = true;
-
-            final Object objectPosition = cube.getPosition().getValue();
-            if (objectPosition instanceof String[] posArray) {
-                float x = (float) MoLangEngine.eval(scope, posArray[0]).getAsNumber();
-                float y = (float) MoLangEngine.eval(scope, posArray[1]).getAsNumber();
-                float z = (float) MoLangEngine.eval(scope, posArray[2]).getAsNumber();
-                (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(x, y, z);
-                donePosition = true;
-            } else if (objectPosition instanceof Float posNumber) {
-                (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(posNumber, posNumber, posNumber);
-                donePosition = true;
-            } else if (objectPosition instanceof String posNumber) {
-                float pos = (float) MoLangEngine.eval(scope, posNumber).getAsNumber();
-                (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(pos, pos, pos);
-                donePosition = true;
-            } else if (objectPosition instanceof TreeMap<?, ?> rawMap) {
-                final TreeMap<Float, ValueOrValue<?>> map = (TreeMap<Float, ValueOrValue<?>>) rawMap;
-                final Queue<Map.Entry<Float, ValueOrValue<?>>> entries = new ConcurrentLinkedQueue<>();
-                map.entrySet().forEach(entries::add);
-
-                CubeAnimateData data = this.position.get(key);
-                Map.Entry<Float, ValueOrValue<?>> entry;
-                while ((entry = entries.peek()) != null) {
-                    float timestamp = entry.getKey();
-                    if (animTime < timestamp) {
-                        if (data.available) {
-                            data.lerp();
-                            (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(data.currentX, data.currentY, data.currentZ);
-                        }
-
-                        break;
-                    }
-
-                    data.pastTimeFrame = data.currentTimeFrame;
-                    data.currentTimeFrame = timestamp;
-                    data.actualTimeFrame = animTime;
-                    if (data.available) {
-                        data.lerp();
-                        (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(data.currentX, data.currentY, data.currentZ);
-                    }
-
-                    entries.poll();
-                    // Already play this, don't have to do it twice.
-                    if (entries.peek() != null && animTime >= timestamp && animTime > entries.peek().getKey()) {
-                        continue;
-                    }
-
-                    if (entry.getValue().getValue() instanceof SimpleTimeStamp simple) {
-                        data.available = false;
-
-                        float x = (float) MoLangEngine.eval(scope, simple.value()[0]).getAsNumber();
-                        float y = (float) MoLangEngine.eval(scope, simple.value()[1]).getAsNumber();
-                        float z = (float) MoLangEngine.eval(scope, simple.value()[2]).getAsNumber();
-                        (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(x, y, z);
-                    } else if (entry.getValue().getValue() instanceof ComplexTimeStamp complex) {
-                        // Tf is pre post.... lerp to the next one using post and pre is the starting frame?
-                        if (data.post != null) {
-                            data.currentX = (float) MoLangEngine.eval(scope, data.post[0]).getAsNumber();
-                            data.currentY = (float) MoLangEngine.eval(scope, data.post[1]).getAsNumber();
-                            data.currentZ = (float) MoLangEngine.eval(scope, data.post[2]).getAsNumber();
-                        }
-
-                        data.available = true;
-
-                        if (complex.pre() != null) {
-                            data.targetX = (float) MoLangEngine.eval(scope, complex.pre()[0]).getAsNumber();
-                            data.targetY = (float) MoLangEngine.eval(scope, complex.pre()[1]).getAsNumber();
-                            data.targetZ = (float) MoLangEngine.eval(scope, complex.pre()[2]).getAsNumber();
-                        }
-
-                        data.post = complex.post();
-                        (((IModelPart)((Object)part))).viaBedrockUtility$setOffset(data.currentX, data.currentY, data.currentZ);
-                    }
-                }
-
-                if (entries.peek() == null && data.done()) {
-                    donePosition = true;
-                }
-            }
-
-            if (donePosition && doneRotation && doneScale) {
+            if (update(UpdateType.POSITION, scope, part, this.position.get(key), cube.getPosition().getValue()) &&
+                    update(UpdateType.ROTATION, scope, part, this.rotation.get(key), cube.getRotation().getValue()) &&
+                    update(UpdateType.SCALE, scope, part, this.scale.get(key), cube.getScale().getValue())) {
                 this.nothingToUpdate.add(key);
             }
         }
+    }
+
+    // Ehm.... shit code incoming, i guess?
+    private boolean update(UpdateType type, Scope scope, ModelPart part, CubeAnimateData data, Object object) throws IOException {
+        float animTime = ((float) System.currentTimeMillis() - this.startMS) / 1000L;
+
+        final IModelPart iPart = (IModelPart) ((Object)part);
+
+        boolean update = false;
+        float valueX = 0, valueY = 0, valueZ = 0;
+
+        boolean done = false;
+        if (object instanceof String[] posArray) {
+            float x = (float) MoLangEngine.eval(scope, posArray[0]).getAsNumber();
+            float y = (float) MoLangEngine.eval(scope, posArray[1]).getAsNumber();
+            float z = (float) MoLangEngine.eval(scope, posArray[2]).getAsNumber();
+            update = true;
+            valueX = x;
+            valueY = y;
+            valueZ = z;
+
+            done = true;
+        } else if (object instanceof Float posNumber) {
+            update = true;
+            valueX = valueY = valueZ = posNumber;
+            done = true;
+        } else if (object instanceof String posNumber) {
+            float pos = (float) MoLangEngine.eval(scope, posNumber).getAsNumber();
+            update = true;
+            valueX = valueY = valueZ = pos;
+            done = true;
+        } else if (object instanceof TreeMap<?, ?> rawMap) {
+            final TreeMap<Float, ValueOrValue<?>> map = (TreeMap<Float, ValueOrValue<?>>) rawMap;
+            final Queue<Map.Entry<Float, ValueOrValue<?>>> entries = new ConcurrentLinkedQueue<>();
+            map.entrySet().forEach(entries::add);
+
+            Map.Entry<Float, ValueOrValue<?>> entry;
+            while ((entry = entries.peek()) != null) {
+                float timestamp = entry.getKey();
+                if (animTime < timestamp) {
+                    if (data.available) {
+                        data.lerp();
+                        update = true;
+                        valueX = data.currentX;
+                        valueY = data.currentY;
+                        valueZ = data.currentZ;
+                    }
+
+                    break;
+                }
+
+                data.pastTimeFrame = data.currentTimeFrame;
+                data.currentTimeFrame = timestamp;
+                data.actualTimeFrame = animTime;
+                if (data.available) {
+                    data.lerp();
+                    update = true;
+                    valueX = data.currentX;
+                    valueY = data.currentY;
+                    valueZ = data.currentZ;
+                }
+
+                entries.poll();
+                // Already play this, don't have to do it twice.
+                if (entries.peek() != null && animTime >= timestamp && animTime > entries.peek().getKey()) {
+                    continue;
+                }
+
+                if (entry.getValue().getValue() instanceof SimpleTimeStamp simple) {
+                    data.available = false;
+
+                    float x = (float) MoLangEngine.eval(scope, simple.value()[0]).getAsNumber();
+                    float y = (float) MoLangEngine.eval(scope, simple.value()[1]).getAsNumber();
+                    float z = (float) MoLangEngine.eval(scope, simple.value()[2]).getAsNumber();
+                    update = true;
+                    valueX = x;
+                    valueY = y;
+                    valueZ = z;
+                } else if (entry.getValue().getValue() instanceof ComplexTimeStamp complex) {
+                    // Tf is pre post.... lerp to the next one using post and pre is the starting frame?
+                    if (data.post != null) {
+                        data.currentX = (float) MoLangEngine.eval(scope, data.post[0]).getAsNumber();
+                        data.currentY = (float) MoLangEngine.eval(scope, data.post[1]).getAsNumber();
+                        data.currentZ = (float) MoLangEngine.eval(scope, data.post[2]).getAsNumber();
+                    }
+
+                    data.available = true;
+
+                    if (complex.pre() != null) {
+                        data.targetX = (float) MoLangEngine.eval(scope, complex.pre()[0]).getAsNumber();
+                        data.targetY = (float) MoLangEngine.eval(scope, complex.pre()[1]).getAsNumber();
+                        data.targetZ = (float) MoLangEngine.eval(scope, complex.pre()[2]).getAsNumber();
+                    }
+
+                    data.post = complex.post();
+                    update = true;
+                    valueX = data.currentX;
+                    valueY = data.currentY;
+                    valueZ = data.currentZ;
+                }
+            }
+
+            if (entries.peek() == null && data.done()) {
+                done = true;
+            }
+        }
+
+        if (update) {
+            switch (type) {
+                case POSITION -> iPart.viaBedrockUtility$setOffset(valueX, valueY, valueZ);
+                case ROTATION -> iPart.viaBedrockUtility$setAngles(valueX, valueY, valueZ);
+                case SCALE -> iPart.viaBedrockUtility$setAngles(valueX, valueY, valueZ);
+            }
+        }
+
+        return done;
     }
 
     public void stop() {
@@ -242,6 +277,10 @@ public class Animator {
         }
 
         return null;
+    }
+
+    private enum UpdateType {
+        POSITION, ROTATION, SCALE;
     }
 
     private static class CubeAnimateData {
