@@ -21,6 +21,7 @@ import org.oryxel.viabedrockutility.payload.PayloadHandler;
 import org.oryxel.viabedrockutility.payload.impl.entity.ModelRequestPayload;
 import org.oryxel.viabedrockutility.renderer.BaseCustomEntityRenderer;
 import org.oryxel.viabedrockutility.renderer.extra.CustomEntityRendererImpl;
+import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
 import org.oryxel.viabedrockutility.util.GeometryUtil;
 import team.unnamed.mocha.runtime.Scope;
 import team.unnamed.mocha.runtime.binding.JavaObjectBinding;
@@ -123,7 +124,7 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
                 }
 
                 final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
-                models.add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (EntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+                models.add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
 
                 keySet.add(key);
             }
@@ -147,7 +148,7 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
                 }
 
                 final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
-                data.getRenderer().getModels().add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (EntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+                data.getRenderer().getModels().add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
 
                 data.availableModels.add(key);
             }

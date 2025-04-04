@@ -11,6 +11,7 @@ import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.cube.converter.util.element.UVMap;
 import org.joml.Vector3f;
 import org.oryxel.viabedrockutility.mixin.interfaces.IModelPart;
+import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
 
 import java.util.*;
 
@@ -96,7 +97,7 @@ public final class GeometryUtil {
             }
         }
 
-        return player ? new PlayerEntityModel(root.part(), slim) : new EntityModel<>(root.part()) {};
+        return player ? new PlayerEntityModel(root.part(), slim) : new CustomEntityModel<>(root.part());
     }
 
     private static String adjustFormatting(String name) {

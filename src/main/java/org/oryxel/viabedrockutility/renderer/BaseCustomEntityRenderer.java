@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.oryxel.viabedrockutility.material.data.Material;
+import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
 
 import java.util.List;
 
@@ -26,8 +27,6 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
     @Override
     public void render(CustomEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         for (Model model : this.models) {
-            this.onRenderModel(state, model);
-
             matrices.push();
 
             this.setupTransforms(state, matrices);
@@ -43,8 +42,6 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
             matrices.pop();
         }
     }
-
-    public void onRenderModel(final CustomEntityRenderState state, final Model model) {}
 
     @Override
     public boolean shouldRender(T entity, Frustum frustum, double x, double y, double z) {
@@ -70,7 +67,7 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
         return new CustomEntityRenderState();
     }
 
-    public record Model(String key, String geometry, EntityModel<?> model, Identifier texture, Material material) {
+    public record Model(String key, String geometry, CustomEntityModel<?> model, Identifier texture, Material material) {
     }
 
     @Getter
