@@ -18,8 +18,7 @@ public class Animator {
     private final Scope baseScope;
     private final AnimationDefinitions.AnimationData data;
 
-    private boolean resetRunningTime;
-    private long animationStartMS;
+    private long animationStartMS, waitingTimeMS;
 
     private boolean donePlaying, started, firstPlay;
 
@@ -31,7 +30,7 @@ public class Animator {
         this.data = data;
 
         this.animationStartMS = System.currentTimeMillis();
-        this.started = true;
+        this.waitingTimeMS = System.currentTimeMillis();
         this.firstPlay = true;
     }
 
@@ -42,11 +41,6 @@ public class Animator {
             } else {
                 return;
             }
-        }
-
-        if (this.resetRunningTime) {
-            this.animationStartMS = System.currentTimeMillis();
-            this.resetRunningTime = false;
         }
 
         final Scope scope = baseScope.copy();
@@ -66,13 +60,16 @@ public class Animator {
         if (!this.started) {
             boolean skipThisTick = true;
 
-            float seconds = (System.currentTimeMillis() - this.animationStartMS) / 1000F;
+            float seconds = (System.currentTimeMillis() - this.waitingTimeMS) / 1000F;
             double requiredLaunchTime = MoLangEngine.eval(scope, this.firstPlay ? this.data.animation().getStartDelay() : this.data.animation().getLoopDelay()).getAsNumber();
-            if (seconds > requiredLaunchTime) {
+            if (seconds >= requiredLaunchTime) {
                 skipThisTick = false;
                 this.started = true;
                 this.firstPlay = false;
-                this.animationStartMS = System.currentTimeMillis();
+
+                if (this.data.animation().getLoop().getValue().equals(false)) {
+                    this.animationStartMS = System.currentTimeMillis();
+                }
             }
 
             if (this.started && this.data.animation().isResetBeforePlay()) {
@@ -90,22 +87,26 @@ public class Animator {
         queryBinding.set("anim_time", Value.of(runningTime));
         queryBinding.set("life_time", Value.of(runningTime));
 
-        System.out.println("animate!");
         AnimationHelper.animate(scope, model, data.compiled(), System.currentTimeMillis() - this.animationStartMS, 1, TEMP_VEC);
 
-        if (runningTime >= data.compiled().lengthInSeconds()) {
+        if ((System.currentTimeMillis() - this.animationStartMS) / 1000F >= data.compiled().lengthInSeconds()) {
             System.out.println("Reset since animation length: " + data.animation().getAnimationLength());
             this.stop();
         }
     }
 
     public void stop() {
-        if (!"hold_on_last_frame".equals(this.data.animation().getLoop().getValue())) {
+        this.stop(false);
+    }
+
+    public void stop(boolean forcefully) {
+        if (this.data.animation().getLoop().getValue().equals(false) || forcefully) {
             System.out.println("reset!");
             ((IModelPart)((Object)model.getRootPart())).viaBedrockUtility$resetEverything();
         }
 
-        this.resetRunningTime = true;
+        this.waitingTimeMS = System.currentTimeMillis();
+
         this.donePlaying = true;
         this.started = false;
     }

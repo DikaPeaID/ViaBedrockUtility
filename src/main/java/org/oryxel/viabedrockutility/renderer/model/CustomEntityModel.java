@@ -32,7 +32,7 @@ public class CustomEntityModel<T extends BaseCustomEntityRenderer.CustomEntityRe
     }
 
     public void reset() {
-        this.animators.values().forEach(Animator::stop);
+        this.animators.values().forEach(animator -> animator.stop(true));
         this.animators.clear();
     }
 
