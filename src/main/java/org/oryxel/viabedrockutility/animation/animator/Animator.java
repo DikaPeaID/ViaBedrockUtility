@@ -4,6 +4,7 @@ import lombok.Setter;
 import net.minecraft.client.model.Model;
 import org.joml.Vector3f;
 import org.oryxel.viabedrockutility.animation.vanilla.AnimationHelper;
+import org.oryxel.viabedrockutility.entity.CustomEntityTicker;
 import org.oryxel.viabedrockutility.mixin.interfaces.IModelPart;
 import org.oryxel.viabedrockutility.mocha.MoLangEngine;
 import org.oryxel.viabedrockutility.pack.definitions.AnimationDefinitions;
@@ -13,9 +14,13 @@ import team.unnamed.mocha.runtime.value.MutableObjectBinding;
 import team.unnamed.mocha.runtime.value.Value;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Animator {
-    private final Model model;
+    private final CustomEntityTicker ticker;
     private final AnimationDefinitions.AnimationData data;
 
     private long animationStartMS;
@@ -27,15 +32,15 @@ public class Animator {
     @Setter
     private Scope baseScope;
 
-    public Animator(Model model, AnimationDefinitions.AnimationData data) {
-        this.model = model;
+    public Animator(CustomEntityTicker ticker, AnimationDefinitions.AnimationData data) {
+        this.ticker = ticker;
         this.data = data;
 
         this.animationStartMS = System.currentTimeMillis();
         this.firstPlay = true;
     }
 
-    public void animate(CustomEntityRenderer.CustomEntityRenderState state) throws IOException {
+    public void animate(Model model, CustomEntityRenderer.CustomEntityRenderState state) throws IOException {
         if (this.donePlaying) {
             if (this.data.animation().getLoop().getValue().equals(true)) {
                 this.donePlaying = false;
@@ -69,6 +74,7 @@ public class Animator {
                 this.firstPlay = false;
 
                 this.animationStartMS = System.currentTimeMillis();
+                this.ticker.runPreAnimationTask();
             }
 
             if (this.started && this.data.animation().isResetBeforePlay()) {
@@ -88,17 +94,45 @@ public class Animator {
 
         AnimationHelper.animate(scope, model, data.compiled(), System.currentTimeMillis() - this.animationStartMS, 1, TEMP_VEC);
 
-        if ((System.currentTimeMillis() - this.animationStartMS) / 1000F >= data.compiled().lengthInSeconds()) {
+        float runningTimeWithoutLoop = (System.currentTimeMillis() - this.animationStartMS) / 1000F;
+        this.tickTimeline(runningTimeWithoutLoop);
+
+        if (runningTimeWithoutLoop >= data.compiled().lengthInSeconds()) {
             System.out.println("Reset since animation length: " + data.compiled().lengthInSeconds());
-            this.stop();
+            this.stop(model);
         }
     }
 
-    public void stop() {
-        this.stop(false);
+    private void tickTimeline(float runningTime) {
+        final Queue<Map.Entry<Float, List<String>>> entries = new ConcurrentLinkedQueue<>();
+        this.data.animation().getTimeline().entrySet().forEach(entries::add);
+
+        Map.Entry<Float, List<String>> entry;
+        while ((entry = entries.peek()) != null) {
+            entries.poll();
+
+            float timestamp = entry.getKey();
+            if (runningTime < timestamp) {
+                continue;
+            }
+
+            if (entry.getValue().isEmpty()) {
+                continue;
+            }
+
+            // Equal to this timestamp and smaller than the next timestamp.
+            if ((entries.peek() == null || entries.peek().getKey() > runningTime) && Math.abs(timestamp - runningTime) < 0.005F) {
+                this.ticker.handleAnimationTimeline(entry.getValue());
+                System.out.println(runningTime + "," + timestamp);
+            }
+        }
     }
 
-    public void stop(boolean forcefully) {
+    public void stop(Model model) {
+        this.stop(model, false);
+    }
+
+    public void stop(Model model, boolean forcefully) {
         if (this.data.animation().getLoop().getValue().equals(false) || forcefully) {
             ((IModelPart)((Object)model.getRootPart())).viaBedrockUtility$resetEverything();
         }

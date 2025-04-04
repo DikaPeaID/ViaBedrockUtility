@@ -15,10 +15,15 @@ import org.oryxel.viabedrockutility.material.data.Material;
 import org.oryxel.viabedrockutility.pack.definitions.AnimationDefinitions;
 import org.oryxel.viabedrockutility.renderer.model.CustomEntityModel;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, CustomEntityRenderer.CustomEntityRenderState> {
+    private final Map<String, Animator> animators = new ConcurrentHashMap<>();
+
     private final CustomEntityTicker ticker;
     private final List<Model> models;
 
@@ -36,8 +41,13 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
             this.setupTransforms(state, matrices);
             matrices.scale(-1.0F, -1.0F, 1.0F);
             matrices.translate(0.0F, -1.501F, 0.0F);
-            this.ticker.update();
-            model.model.setAngles(state);
+            this.animators.values().forEach(animator -> {
+                try {
+                    animator.animate(model.model(), state);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
             RenderLayer renderLayer = model.material.info().getVariants().get("skinning_color").build().apply(model.texture);
             if (renderLayer != null) {
@@ -83,7 +93,8 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
     }
 
     public void reset() {
-        this.getModels().forEach(m -> m.model().reset());
+        this.animators.values().forEach(animator -> this.models.forEach(m -> animator.stop(m.model(), true)));
+        this.animators.clear();
     }
 
     public void play(final AnimationDefinitions.AnimationData data) {
@@ -91,6 +102,6 @@ public class CustomEntityRenderer<T extends Entity> extends EntityRenderer<T, Cu
             return;
         }
 
-        this.getModels().forEach(model -> model.model().play(data.animation().getIdentifier(), new Animator(model.model(), data)));
+        this.animators.put(data.animation().getIdentifier(), new Animator(this.ticker, data));
     }
 }

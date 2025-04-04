@@ -1,16 +1,19 @@
 package org.oryxel.viabedrockutility.animation;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.oryxel.viabedrockutility.animation.element.Cube;
+import org.oryxel.viabedrockutility.util.JsonUtil;
 import org.oryxel.viabedrockutility.util.mojangweirdformat.ValueOrValue;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 // https://bedrock.dev/docs/stable/Schemas
 // https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationsoverview?
@@ -26,6 +29,7 @@ public class Animation {
     private boolean resetBeforePlay; // override_previous_animation
     private float animationLength = -1;
     private final List<Cube> cubes = new ArrayList<>();
+    private final Map<Float, List<String>> timeline = new TreeMap<>();
 
     public static List<Animation> parse(final JsonObject object) {
         final JsonObject animationsList = object.getAsJsonObject("animations");
@@ -67,6 +71,23 @@ public class Animation {
 
             if (animationObject.has("animation_length")) {
                 animation.setAnimationLength(animationObject.get("animation_length").getAsFloat());
+            }
+
+            if (animationObject.has("timeline")) {
+                final JsonObject timelineObject = animationObject.get("timeline").getAsJsonObject();
+                for (final String string : timelineObject.keySet()) {
+                    if (!NumberUtils.isCreatable(string)) {
+                        continue;
+                    }
+                    float timestamp = Float.parseFloat(string);
+
+                    final JsonElement element = timelineObject.get(string);
+                    if (element instanceof JsonPrimitive primitive && primitive.isString()) {
+                        animation.getTimeline().put(timestamp, Collections.singletonList(primitive.getAsString()));
+                    } else if (element instanceof JsonArray array) {
+                        animation.getTimeline().put(timestamp, JsonUtil.arrayToStringSet(array).stream().toList());
+                    }
+                }
             }
 
             if (!animationObject.has("bones")) {

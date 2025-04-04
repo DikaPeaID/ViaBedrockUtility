@@ -27,10 +27,12 @@ import team.unnamed.mocha.runtime.value.Value;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.oryxel.viabedrockutility.payload.handler.CustomEntityPayloadHandler.*;
 
 public class CustomEntityTicker {
+    @Getter
     private final Scope entityScope = BASE_SCOPE.copy();
 
     @Setter
@@ -60,7 +62,7 @@ public class CustomEntityTicker {
         final EntityRendererFactory.Context context = new EntityRendererFactory.Context(client.getEntityRenderDispatcher(),
                 client.getItemModelManager(), client.getMapRenderer(), client.getBlockRenderManager(),
                 client.getResourceManager(), client.getLoadedEntityModels(), new EquipmentModelLoader(), client.textRenderer);
-        this.renderer = new CustomEntityRenderer<>(this, new ArrayList<>(), context);
+        this.renderer = new CustomEntityRenderer<>(this, new CopyOnWriteArrayList<>(), context);
 
         this.entityDefinition = entityDefinition;
 
@@ -102,6 +104,28 @@ public class CustomEntityTicker {
         this.entityScope.readOnly(true);
     }
 
+    public void handleAnimationTimeline(List<String> expressions) {
+        try {
+            for (String expression : expressions) {
+                MoLangEngine.eval(this.entityScope, expression);
+            }
+        } catch (Throwable e) {
+            ViaBedrockUtilityFabric.LOGGER.warn("Failed to initialize custom entity pre-animation variables", e);
+        }
+
+        this.update();
+    }
+
+    public void runPreAnimationTask() {
+        try {
+            for (String initExpression : this.entityDefinition.entityData().getScripts().pre_animation()) {
+                MoLangEngine.eval(this.entityScope, initExpression);
+            }
+        } catch (Throwable e) {
+            ViaBedrockUtilityFabric.LOGGER.warn("Failed to initialize custom entity pre-animation variables", e);
+        }
+    }
+
     public void update() {
         final Scope executionScope = this.entityScope.copy();
         final MutableObjectBinding queryBinding = new MutableObjectBinding();
@@ -126,18 +150,8 @@ public class CustomEntityTicker {
         executionScope.set("query", queryBinding);
         executionScope.set("q", queryBinding);
 
-        try {
-            for (String initExpression : this.entityDefinition.entityData().getScripts().pre_animation()) {
-                MoLangEngine.eval(this.entityScope, initExpression);
-            }
-        } catch (Throwable e) {
-            ViaBedrockUtilityFabric.LOGGER.warn("Failed to initialize custom entity pre-animation variables", e);
-        }
-
         if (!evaluateRenderControllerChange(executionScope)) {
-            this.renderer.getModels().forEach(m -> {
-                m.model().getAnimators().values().forEach(animator -> animator.setBaseScope(executionScope.copy()));
-            });
+            this.renderer.getAnimators().values().forEach(animator -> animator.setBaseScope(executionScope.copy()));
             return;
         }
 
@@ -186,9 +200,7 @@ public class CustomEntityTicker {
             this.hasPlayInitAnimation = true;
         }
 
-        this.renderer.getModels().forEach(m -> {
-            m.model().getAnimators().values().forEach(animator -> animator.setBaseScope(executionScope.copy()));
-        });
+        this.renderer.getAnimators().values().forEach(animator -> animator.setBaseScope(executionScope.copy()));
     }
 
     private boolean evaluateRenderControllerChange(final Scope executionScope) {
