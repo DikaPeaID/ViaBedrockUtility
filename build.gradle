@@ -69,6 +69,7 @@ def enumGeneratorTask = tasks.register("enumGeneratorTask", EnumGeneratorTask) {
 	outputDirectory = enumSourceDir
 }
 tasks.compileJava.dependsOn(enumGeneratorTask)
+tasks.sourcesJar.dependsOn(enumGeneratorTask)
 
 sourceSets.main.java.srcDir(enumSourceDir)
 
