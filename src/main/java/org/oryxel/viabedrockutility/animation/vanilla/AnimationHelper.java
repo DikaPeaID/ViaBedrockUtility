@@ -17,19 +17,24 @@ public class AnimationHelper {
         float g = AnimationHelper.getRunningSeconds(animation, runningTime);
         for (Map.Entry<String, List<AnimateTransformation>> entry : animation.boneAnimations().entrySet()) {
             Optional<ModelPart> optional = getPartByName(model.getParts(), entry.getKey());
+            if (optional.isEmpty()) {
+                continue;
+            }
+
+            final ModelPart part = optional.get();
             List<AnimateTransformation> list = entry.getValue();
-            optional.ifPresent(part -> list.forEach(transformation -> {
+            for (AnimateTransformation transformation : list) {
                 VBUKeyFrame[] lvs = transformation.keyframes();
                 int i = Math.max(0, MathHelper.binarySearch(0, lvs.length, index -> g <= lvs[index].timestamp()) - 1);
                 int j = Math.min(lvs.length - 1, i + 1);
                 VBUKeyFrame lv = lvs[i];
                 VBUKeyFrame lv2 = lvs[j];
                 float h = g - lv.timestamp();
-                float k = j != i ? MathHelper.clamp(h / (lv2.timestamp() - lv.timestamp()), 0.0f, 1.0f) : 0.0f;
+                float k = j != i ? MathHelper.clamp(h / (lv2.timestamp() - lv.timestamp()), 0.0f, 1.0f) : 1F;
 
                 lv2.interpolation().apply(scope, tempVec, k, lvs, i, j, scale);
                 transformation.target().apply(part, tempVec);
-            }));
+            }
         }
     }
 

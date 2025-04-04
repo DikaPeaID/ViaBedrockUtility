@@ -23,7 +23,8 @@ public class AnimationDefinitions {
                         this.animations.put(animation.getIdentifier(), new AnimationData(animation, AnimateBuilder.build(animation)));
                     }
                 } catch (Throwable e) {
-                    ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse model definition {}", modelPath);
+                    e.printStackTrace();
+                    ViaBedrockUtilityFabric.LOGGER.warn("Failed to parse animation definition {}", modelPath);
                 }
             }
         }

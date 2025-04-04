@@ -11,7 +11,7 @@ import team.unnamed.mocha.runtime.Scope;
 import java.io.IOException;
 
 // Taken from vanilla Transformation.
-public record AnimateTransformation(Target target, VBUKeyFrame... keyframes) {
+public record AnimateTransformation(Target target, VBUKeyFrame[] keyframes) {
     public static class Interpolations {
         public static final Interpolation LINEAR = (scope,dest, delta, keyframes, start, end, scale) -> {
             Vector3f vector3f2 = eval(scope, keyframes[start].target());

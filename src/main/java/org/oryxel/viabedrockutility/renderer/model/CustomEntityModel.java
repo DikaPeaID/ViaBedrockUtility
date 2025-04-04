@@ -18,7 +18,6 @@ public class CustomEntityModel<T extends BaseCustomEntityRenderer.CustomEntityRe
 
     @Override
     public void setAngles(T state) {
-        super.setAngles(state);
         this.animators.forEach((k, v) -> {
             try {
                 v.animate(state);
@@ -33,6 +32,7 @@ public class CustomEntityModel<T extends BaseCustomEntityRenderer.CustomEntityRe
     }
 
     public void reset() {
+        this.animators.values().forEach(Animator::stop);
         this.animators.clear();
     }
 

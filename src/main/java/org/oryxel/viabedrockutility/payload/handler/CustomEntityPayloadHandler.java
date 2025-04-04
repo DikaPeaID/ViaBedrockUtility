@@ -124,7 +124,7 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
                 }
 
                 final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
-                models.add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+                models.add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<BaseCustomEntityRenderer.CustomEntityRenderState>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
 
                 keySet.add(key);
             }
@@ -148,7 +148,7 @@ public class CustomEntityPayloadHandler extends PayloadHandler {
                 }
 
                 final BedrockRenderController controller = this.packManager.getRenderControllerDefinitions().getRenderControllers().get(model.renderControllerIdentifier());
-                data.getRenderer().getModels().add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<?>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
+                data.getRenderer().getModels().add(new BaseCustomEntityRenderer.Model(key, model.geometry(), (CustomEntityModel<BaseCustomEntityRenderer.CustomEntityRenderState>) GeometryUtil.buildModel(geometry, false, false), texture, evalMaterial(scope, definition, controller)));
 
                 data.availableModels.add(key);
             }

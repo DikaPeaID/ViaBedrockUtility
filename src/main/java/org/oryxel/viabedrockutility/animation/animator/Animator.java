@@ -63,7 +63,7 @@ public class Animator {
         scope.set("q", queryBinding);
         scope.set("query", queryBinding);
 
-        if (this.started) {
+        if (!this.started) {
             boolean skipThisTick = true;
 
             float seconds = (System.currentTimeMillis() - this.animationStartMS) / 1000F;
@@ -72,10 +72,12 @@ public class Animator {
                 skipThisTick = false;
                 this.started = true;
                 this.firstPlay = false;
+                this.animationStartMS = System.currentTimeMillis();
             }
 
             if (this.started && this.data.animation().isResetBeforePlay()) {
                 ((IModelPart)((Object)model.getRootPart())).viaBedrockUtility$resetEverything();
+                this.TEMP_VEC.set(0);
             }
 
             if (skipThisTick) {
@@ -88,6 +90,7 @@ public class Animator {
         queryBinding.set("anim_time", Value.of(runningTime));
         queryBinding.set("life_time", Value.of(runningTime));
 
+        System.out.println("animate!");
         AnimationHelper.animate(scope, model, data.compiled(), System.currentTimeMillis() - this.animationStartMS, 1, TEMP_VEC);
 
         if (runningTime >= data.compiled().lengthInSeconds()) {
@@ -98,10 +101,12 @@ public class Animator {
 
     public void stop() {
         if (!"hold_on_last_frame".equals(this.data.animation().getLoop().getValue())) {
-            ((IModelPart)((Object)model)).viaBedrockUtility$resetEverything();
+            System.out.println("reset!");
+            ((IModelPart)((Object)model.getRootPart())).viaBedrockUtility$resetEverything();
         }
 
         this.resetRunningTime = true;
         this.donePlaying = true;
+        this.started = false;
     }
 }

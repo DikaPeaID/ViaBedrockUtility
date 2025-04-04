@@ -32,6 +32,7 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
             this.setupTransforms(state, matrices);
             matrices.scale(-1.0F, -1.0F, 1.0F);
             matrices.translate(0.0F, -1.501F, 0.0F);
+            model.model.setAngles(state);
 
             RenderLayer renderLayer = model.material.info().getVariants().get("skinning_color").build().apply(model.texture);
             if (renderLayer != null) {
@@ -67,7 +68,7 @@ public class BaseCustomEntityRenderer<T extends Entity> extends EntityRenderer<T
         return new CustomEntityRenderState();
     }
 
-    public record Model(String key, String geometry, CustomEntityModel<?> model, Identifier texture, Material material) {
+    public record Model(String key, String geometry, CustomEntityModel<CustomEntityRenderState> model, Identifier texture, Material material) {
     }
 
     @Getter

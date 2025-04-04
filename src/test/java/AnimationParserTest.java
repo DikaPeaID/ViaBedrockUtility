@@ -1,5 +1,7 @@
 import com.google.gson.JsonParser;
 import org.oryxel.viabedrockutility.animation.Animation;
+import org.oryxel.viabedrockutility.animation.vanilla.AnimateBuilder;
+import org.oryxel.viabedrockutility.animation.vanilla.VBUAnimation;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +39,11 @@ public class AnimationParserTest {
                 }
 
                 final String content = new String(Files.readAllBytes(file.toPath()));
-                Animation.parse(JsonParser.parseString(content).getAsJsonObject()).forEach(System.out::println);
+                List<Animation> animations = Animation.parse(JsonParser.parseString(content).getAsJsonObject());
+                animations.forEach(animation -> {
+                    System.out.println("-> " + animation.getIdentifier());
+                    VBUAnimation vbu = AnimateBuilder.build(animation);
+                });
             }
         } catch (IOException e) {
             e.printStackTrace();
