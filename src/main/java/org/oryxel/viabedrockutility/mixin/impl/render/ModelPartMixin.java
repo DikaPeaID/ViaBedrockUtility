@@ -1,7 +1,6 @@
 package org.oryxel.viabedrockutility.mixin.impl.render;
 
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -22,9 +21,6 @@ import java.util.stream.Stream;
 
 @Mixin(ModelPart.class)
 public abstract class ModelPartMixin implements IModelPart {
-    @Unique
-    public ModelTransform viaBedrockUtility$defaultTransform = ModelTransform.NONE;
-
     @Shadow public float originX;
     @Shadow public float originZ;
 
@@ -41,43 +37,37 @@ public abstract class ModelPartMixin implements IModelPart {
     @Unique private boolean isVBUModel;
     @Unique private boolean neededOffset;
 
-    @Unique private float pivotX;
-    @Unique private float pivotY;
-    @Unique private float pivotZ;
+    @Unique
+    private Vector3f pivot = new Vector3f();
 
-    @Unique private float customPitch;
-    @Unique private float customYaw;
-    @Unique private float customRoll;
+    @Unique
+    private Vector3f offset = new Vector3f();
 
-    @Unique private float offsetX;
-    @Unique private float offsetY;
-    @Unique private float offsetZ;
+    @Unique
+    private Vector3f rotation = new Vector3f();
     
     @Unique
-    private Vector3f defaultOffset = new Vector3f();
+    private Vector3f defaultRotation = new Vector3f();
 
-    @Unique private boolean alreadySetRotation = false;
+    @Unique
+    private boolean alreadySetRotation = false;
 
     @Inject(method = "applyTransform", at = @At("HEAD"))
     public void render(MatrixStack matrices, CallbackInfo ci) {
         // Offset is needed for rotating too!
-        matrices.translate(this.offsetX / 16.0F, this.offsetY / 16.0F, this.offsetZ / 16.0F);
+        matrices.translate(this.offset.x / 16.0F, this.offset.y / 16.0F, this.offset.z / 16.0F);
 
-        matrices.translate(this.pivotX / 16.0F, this.pivotY / 16.0F, this.pivotZ / 16.0F);
-        if (this.customPitch != 0.0F || this.customYaw != 0.0F || this.customRoll != 0.0F) {
-            matrices.multiply((new Quaternionf()).rotationXYZ(this.customPitch * MathUtil.DEGREES_TO_RADIANS, this.customYaw * MathUtil.DEGREES_TO_RADIANS, this.customRoll * MathUtil.DEGREES_TO_RADIANS));
-        }
-        matrices.translate(-this.pivotX / 16.0F, -this.pivotY / 16.0F, -this.pivotZ / 16.0F);
+        matrices.translate(this.pivot.x / 16.0F, this.pivot.y / 16.0F, this.pivot.z / 16.0F);
+        matrices.multiply((new Quaternionf()).rotationXYZ(this.rotation.x * MathUtil.DEGREES_TO_RADIANS, this.rotation.y * MathUtil.DEGREES_TO_RADIANS, this.rotation.z * MathUtil.DEGREES_TO_RADIANS));
+        matrices.translate(this.pivot.x / 16.0F, -this.pivot.y / 16.0F, -this.pivot.z / 16.0F);
 
-        matrices.translate(-this.offsetX / 16.0F, -this.offsetY / 16.0F, -this.offsetZ / 16.0F);
+        matrices.translate(-this.offset.x / 16.0F, -this.offset.y / 16.0F, -this.offset.z / 16.0F);
     }
 
     @Inject(method = "applyTransform", at = @At("TAIL"))
     public void renderTail(MatrixStack matrices, CallbackInfo ci) {
         // Do this after scale since well, this shouldn't be affected by scaling.
-        if (this.offsetX != 0 || this.offsetY != 0 || this.offsetZ != 0) {
-            matrices.translate(this.offsetX / 16.0F, this.offsetY / 16.0F, this.offsetZ / 16.0F);
-        }
+        matrices.translate(this.offset.x / 16.0F, this.offset.y / 16.0F, this.offset.z / 16.0F);
 
         if (!this.isVBUModel || !this.neededOffset) {
             return;
@@ -122,39 +112,30 @@ public abstract class ModelPartMixin implements IModelPart {
     @Override
     public void viaBedrockUtility$resetEverything() {
         this.traverse().toList().forEach(part -> {
-            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(this.viaBedrockUtility$defaultTransform.pitch(),
-                    this.viaBedrockUtility$defaultTransform.yaw(), this.viaBedrockUtility$defaultTransform.roll());
-            ((IModelPart)((Object)part)).viaBedrockUtility$setOffset(this.defaultOffset.x, this.defaultOffset.y, this.defaultOffset.z);
+            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(this.defaultRotation);
 
             this.xScale = this.yScale = this.zScale = 1;
         });
     }
 
     @Override
-    public void viaBedrockUtility$setPivot(float x, float y, float z) {
-        this.pivotX = x;
-        this.pivotY = y;
-        this.pivotZ = z;
+    public void viaBedrockUtility$setPivot(Vector3f vec3) {
+        this.pivot = vec3;
     }
 
     @Override
-    public void viaBedrockUtility$setOffset(float x, float y, float z) {
-        this.offsetX = x;
-        this.offsetY = -y;
-        this.offsetZ = z;
+    public void viaBedrockUtility$setOffset(Vector3f vec3) {
+        this.offset = vec3;
+        this.offset.y *= -1;
     }
 
     @Override
-    public void viaBedrockUtility$setAngles(float pitch, float yaw, float roll) {
+    public void viaBedrockUtility$setAngles(Vector3f vec3) {
         if (!this.alreadySetRotation) {
-            this.viaBedrockUtility$defaultTransform = new ModelTransform(
-                    this.viaBedrockUtility$defaultTransform.x(), this.viaBedrockUtility$defaultTransform.y(), this.viaBedrockUtility$defaultTransform.z(),
-                    pitch, yaw, roll, 1, 1, 1);
+            this.defaultRotation = vec3;
             this.alreadySetRotation = true;
         }
 
-        this.customPitch = pitch;
-        this.customYaw = yaw;
-        this.customRoll = roll;
+        this.rotation = vec3;
     }
 }

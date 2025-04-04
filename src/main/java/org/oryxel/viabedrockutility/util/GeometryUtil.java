@@ -9,6 +9,7 @@ import org.cube.converter.model.element.Cube;
 import org.cube.converter.model.element.Parent;
 import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 import org.cube.converter.util.element.UVMap;
+import org.joml.Vector3f;
 import org.oryxel.viabedrockutility.mixin.interfaces.IModelPart;
 
 import java.util.*;
@@ -34,8 +35,8 @@ public final class GeometryUtil {
             ((IModelPart)((Object)part)).viaBedrockUtility$setVBUModel();
             ((IModelPart)((Object)part)).viaBedrockUtility$setName(bone.getName());
             ((IModelPart)((Object)part)).viaBedrockUtility$setNeededOffset(neededOffset);
-            ((IModelPart)((Object)part)).viaBedrockUtility$setPivot(bone.getPivot().getX(), -bone.getPivot().getY() + 24.016F, bone.getPivot().getZ());
-            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(bone.getRotation().getX() , bone.getRotation().getY(), bone.getRotation().getZ());
+            ((IModelPart)((Object)part)).viaBedrockUtility$setPivot(new Vector3f(bone.getPivot().getX(), -bone.getPivot().getY() + 24.016F, bone.getPivot().getZ()));
+            ((IModelPart)((Object)part)).viaBedrockUtility$setAngles(new Vector3f(bone.getRotation().getX() , bone.getRotation().getY(), bone.getRotation().getZ()));
 
             // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
             for (final Cube cube : bone.getCubes().values()) {
@@ -56,8 +57,8 @@ public final class GeometryUtil {
                 correctUv(cuboid, set, uvMap, uvWidth, uvHeight, cube.getInflate(), cube.isMirror());
 
                 final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of());
-                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setPivot(cube.getPivot().getX(), -cube.getPivot().getY() + 24.016F, cube.getPivot().getZ());
-                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setAngles(cube.getRotation().getX(), cube.getRotation().getY(), cube.getRotation().getZ());
+                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setPivot(new Vector3f(cube.getPivot().getX(), -cube.getPivot().getY() + 24.016F, cube.getPivot().getZ()));
+                ((IModelPart)((Object)cubePart)).viaBedrockUtility$setAngles(new Vector3f(cube.getRotation().getX(), cube.getRotation().getY(), cube.getRotation().getZ()));
                 ((IModelPart)((Object)cubePart)).viaBedrockUtility$setVBUModel();
                 ((IModelPart)((Object)cubePart)).viaBedrockUtility$setNeededOffset(neededOffset);
                 children.put(cube.getParent() + cube.hashCode(), cubePart);
